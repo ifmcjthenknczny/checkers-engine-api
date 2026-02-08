@@ -1,0 +1,14 @@
+{
+  "name": "jscheckers-random-play",
+  "version": "1.0.0",
+  "description": "Checkers with random play and game history saved to disk",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "cd app && npx serve"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

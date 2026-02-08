@@ -1,6 +1,4 @@
-const fs = require('fs');
-
-const GAME_HISTORY_FILE_PATH = '../data/game_history.json'
+const API_BASE = 'http://localhost:3001';
 
 const chunkArray = (array, size) => {
     const chunked = [];
@@ -29,12 +27,12 @@ function htmlBoardToJson() {
     return mappedSquares.map(square => htmlElementToJsonPiece(square))
 }
 
-function createJsonFile() {
-    fs.writeFileSync(GAME_HISTORY_FILE_PATH, '[')
+async function createJsonFile() {
+    await fetch(`${API_BASE}/api/game-history/start`, { method: 'POST' });
 }
 
 function completeJsonFile() {
-    fs.appendFileSync(GAME_HISTORY_FILE_PATH, ']')
+    fetch(`${API_BASE}/api/game-history/end`, { method: 'POST' });
 }
 
 function mapResultToJson(hasWhiteWon) {
@@ -49,10 +47,12 @@ function mapResultToJson(hasWhiteWon) {
 
 function saveGameToJson(boards, hasWhiteWon) {
     const result = mapResultToJson(hasWhiteWon)
-    const content = boards.map(board => ({board, result}))
-    for (const row of content) {
-        fs.appendFileSync(GAME_HISTORY_FILE_PATH, row)
-    }
+    const entries = boards.map(board => ({ board, result }))
+    fetch(`${API_BASE}/api/game-history/append`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries }),
+    });
 }
 
-export {saveGameToJson, createJsonFile, completeJsonFile, htmlBoardToJson}
+export { saveGameToJson, createJsonFile, completeJsonFile, htmlBoardToJson }

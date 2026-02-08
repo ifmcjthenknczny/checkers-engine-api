@@ -586,7 +586,7 @@ async function generateTitleWindow() {
     await sleep(1_000);
     container.remove();
     main.innerHTML = "";
-    createJsonFile();
+    await createJsonFile();
     startGame();
 }
 

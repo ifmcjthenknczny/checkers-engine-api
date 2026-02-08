@@ -6,3 +6,5 @@ script_new.js
 .serena/**
 data/**
 data
+node_modules
+node_modules/**
