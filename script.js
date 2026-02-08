@@ -34,7 +34,7 @@ function pieceUnhold() {
     if (chainedCapturePiece !== null) return;
     // if there is piece held right now, remove its id and all legal moves marks and unhighligh pieces that can move
     if (!!document.querySelector("#piece-clicked"))
-        document.querySelector("#piece-clicked").removeAttribute("id");
+        document.querySelector("#piece-clicked")?.removeAttribute("id");
 }
 
 // turns
@@ -140,7 +140,6 @@ function changeGameInfo() {
 // move animation
 async function movePiece(startSquare, targetSquare, transitionTimeMs) {
     // block flipping the board, because everything crashes
-    flipBoardBlock = true;
     // selects piece, squares id and starting and target indexes
     const pieceToMove = startSquare.firstChild;
     const [startCol, startRow] = getSquareColAndRow(startSquare);
@@ -189,7 +188,6 @@ async function movePiece(startSquare, targetSquare, transitionTimeMs) {
     pieceToMove.style.position = "";
     pieceToMove.style.width = "";
     pieceToMove.style.height = "";
-    flipBoardBlock = false;
 }
 
 // move rules-related functions
@@ -408,65 +406,6 @@ function isThereACapturePossibility() {
     return false;
 }
 
-// cheats
-function queenCheat() {
-    // cheat to make all your pieces queens, possible to turn on only one time
-    const selector = whiteToMove ? ".piece--white" : ".piece--black";
-    if (
-        [...document.querySelectorAll(selector)].filter((p) =>
-            p.classList.contains("piece--queen")
-        ).length === [...document.querySelectorAll(selector)].length
-    )
-        return;
-    const allPieces = [...document.querySelectorAll(selector)].filter(
-        (p) => !p.classList.contains("piece--queen")
-    );
-    pieceUnhold();
-    allPieces.map((p) => crownTheQueen(p));
-    alert(`Life is too hard for you, eh?`);
-}
-
-function removeRandomComputerPiece() {
-    // removes random computer piece from the board
-    const selector = !whiteToMove ? ".piece--white" : ".piece--black";
-    const pieces = document.querySelectorAll(selector);
-    pieces[Math.floor(Math.random() * pieces.length)].remove();
-    if (endOfGame()) congratsToWinner();
-}
-
-function addPlayerPieceRandomly() {
-    // adds to the board piece of player's color on random free square
-    const freeBlackSquares = [
-        ...document.querySelectorAll(".grid__square--black"),
-    ].filter(
-        (sq) =>
-        !(
-            sq.firstElementChild && sq.firstElementChild.classList.contains("piece")
-        )
-    );
-    if (freeBlackSquares.length === 0) return;
-    const squareToAddPieceOn =
-        freeBlackSquares[Math.floor(Math.random() * freeBlackSquares.length)];
-    const piece = document.createElement("div");
-    piece.classList.add(
-        "piece",
-        "piece-hover",
-        whiteToMove ? "piece--white" : "piece--black"
-    );
-    piece.addEventListener("click", pieceHold);
-    squareToAddPieceOn.append(piece);
-    if (endOfGame()) congratsToWinner();
-}
-
-function leavesOnePlayerPiece() {
-    // selects all player pieces on the board, 
-    const selector = whiteToMove ? '.piece--white' : '.piece--black';
-    const playerPieces = [...document.querySelectorAll(selector)];
-    playerPieces.splice(Math.floor(Math.random() * playerPieces.length), 1);
-    for (let piece of playerPieces) piece.remove();
-    if (endOfGame()) congratsToWinner();
-}
-
 // end game
 function determineWinner() {
     // determines who wins by if it has any moves or any pieces left, else it is draw - null
@@ -625,31 +564,13 @@ function generateStartingPosition(board) {
     }
 }
 
-function generateButtons() {
-    // generates button container with two buttons below the board, along with the actions they provide
-    const buttonContainer = document.createElement("section");
-    buttonContainer.classList.add("button-container", "button-container--game");
-
-    const resetButton = document.createElement("button");
-    resetButton.classList.add("button", "button--reset", "button--game");
-    resetButton.innerText = "restart";
-    resetButton.addEventListener("click", () => {
-        document.body.innerHTML = "";
-        document.body.appendChild(document.createElement("main"));
-        resetGlobalVariables();
-        const main = document.querySelector("main");
-        main.innerHTML = "";
-        startGame()
-    });
-
-    const flipButton = document.createElement("button");
-    flipButton.classList.add("button", "button--flip", "button--game");
-    flipButton.innerText = "flip board";
-    flipButton.addEventListener("click", flipBoard);
-
-    buttonContainer.appendChild(resetButton);
-    buttonContainer.appendChild(flipButton);
-    document.body.appendChild(buttonContainer);
+function resetGame() {
+    document.body.innerHTML = "";
+    document.body.appendChild(document.createElement("main"));
+    resetGlobalVariables();
+    const main = document.querySelector("main");
+    main.innerHTML = "";
+    startGame()
 }
 
 function resetGlobalVariables() {
@@ -660,8 +581,6 @@ function resetGlobalVariables() {
     onlyQueenMovesWithoutCapture = 0;
     chainedCapturePiece = null;
     queenCaptureForbiddenDirection = [null, null];
-    flipBoardBlock = false;
-    cheat = "";
 }
 
 function generateGraveyards() {
@@ -713,79 +632,11 @@ async function generateTitleWindow() {
     startGame()
 }
 
-function flipBoard() {
-    // only run this function if not blocked
-    if (flipBoardBlock) return;
-    // select all board squares and their children, if square contains something - push it to array, else push false
-    const boardElements = [...document.querySelector(".board").children];
-    const boardState = [];
-    for (let element of boardElements) {
-        if (!element.classList.contains("grid__square")) continue;
-        if (!!element.firstChild) boardState.push(element.firstChild.cloneNode(true));
-        else boardState.push(false);
-    }
-    // remove whole board from DOM, reverse array to which all elements where pushed, change orientation of board variable and generate board once again, this time upside down
-    document.querySelector(".board").remove();
-    boardState.reverse();
-    whitesOnBottom = !whitesOnBottom;
-    generateBoard(BOARD_SIZE);
-    // get only squares of the board and push elements to corresponding squares, giving pieces events as well
-    const newBoard = [...document.querySelector(".board").children].filter(
-        (child) => child.classList.contains("grid__square")
-    );
-    for (let i = 0; i < boardState.length; i++) {
-        if (!boardState[i]) continue;
-        const clickFunction =
-            (whiteToMove && boardState[i].classList.contains("piece--white")) ||
-            (!whiteToMove && boardState[i].classList.contains("piece--black")) ?
-            pieceHold :
-            pieceUnhold;
-        boardState[i].addEventListener("click", clickFunction);
-        newBoard[i].appendChild(boardState[i]);
-    }
-    // we have to also reverse graveyards
-    swapGraveyards();
-}
-
-function swapGraveyards() {
-    // create two variables with state of top and bottom, remove pieces in graveyard from dom, reverse arrays of state, then add everything upside down
-    const graveyardTopState = [
-        ...document.querySelector(".captured-pieces--top").cloneNode(true).children,
-    ];
-    const graveyardBottomState = [
-        ...document.querySelector(".captured-pieces--bottom").cloneNode(true)
-        .children,
-    ];
-    for (let minipiece of document.querySelectorAll(".mini-piece"))
-        minipiece.remove();
-    const newGraveyardTop = document.querySelector(".captured-pieces--top");
-    const newGraveyardBottom = document.querySelector(".captured-pieces--bottom");
-    for (let minipiece of graveyardTopState)
-        newGraveyardBottom.appendChild(minipiece);
-    for (let minipiece of graveyardBottomState)
-        newGraveyardTop.appendChild(minipiece);
-}
-
-function cheatsOn() {
-    // turns on cheats and tracks string entered by player, resets string if key is not char or it did started 
-    document.addEventListener("keydown", function(e) {
-        if (flipBoardBlock) return;
-        if (e.key.length !== 1) cheat = "";
-        else cheat += e.key.toUpperCase();
-        if (cheat in cheatMap) {
-            cheatMap[cheat]();
-            cheat = '';
-        }
-    })
-}
-
 async function startGame() {
     // animation, generate board, pieces and everything around it and if computer plays white - wait a second and make him move
     fadeIn("body", 200);
-    cheatsOn();
     generateGraveyards();
     generateBoard(BOARD_SIZE);
-    generateButtons();
     generateGameInfo();
     generateStartingPosition(document.querySelector(".board"));
     await sleep(1000);
@@ -794,13 +645,6 @@ async function startGame() {
 
 // globals
 const BOARD_SIZE = 8;
-let cheat = "";
-const cheatMap = {
-    "AEZAKMI": queenCheat,
-    "NUTTERTOOLS": removeRandomComputerPiece,
-    "ASPIRINE": addPlayerPieceRandomly,
-    "LEAVEMEALONE": leavesOnePlayerPiece
-};
 const cols = range(BOARD_SIZE, "a");
 const rows = range(BOARD_SIZE, 1);
 let turn = 1;
@@ -810,7 +654,6 @@ let whitesOnBottom = true;
 let onlyQueenMovesWithoutCapture = 0;
 let chainedCapturePiece = null;
 let queenCaptureForbiddenDirection = [null, null];
-let flipBoardBlock = false;
 let pieceHoldBlock = false;
 const MOVE_ANIMATION_DURATION_MS = 600;
 generateTitleWindow();
