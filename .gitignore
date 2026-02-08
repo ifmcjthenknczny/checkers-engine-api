@@ -4,3 +4,5 @@ script copy.js
 script_new.js
 .serena
 .serena/**
+data/**
+data

@@ -4,10 +4,11 @@ import {
     fadeIn,
     getSquareColAndRow,
     createDiagonalIterable
-} from './generalhelpers.js';
+} from './helpers.js';
 import {
     pickAMove
 } from './ai.js';
+import {saveGameToJson, createJsonFile, completeJsonFile, htmlBoardToJson} from './gameData.js'
 
 async function computerMove() {
     // declares variables which values are about to be determined. if it is not between multiple, chained captures - pick a piece and move from all computer pieces, else randomly pick a capture of only this piece which is inbetween captures
@@ -63,14 +64,22 @@ async function endTurn() {
     pieceAboutToChainCapture = null;
     forbiddenDirectionForQueenCapture = [null, null];
     // if it is end of game, do what you gotta do when game ends
-    if (endOfGame()) {
-        congratsToWinner();
-        await sleep(1_500)
-        resetGame();
+    if (isGameOver()) {
+        const hasWhiteWon = congratsToWinner();
+        saveGameToJson(gameBoardsHistory, hasWhiteWon)
+        gamesPlayedCount++;
+        if (gamesPlayedCount < MAX_GAMES_TO_PLAY) {
+            // await sleep(500)
+            resetGame();
+        } else {
+            completeJsonFile()
+            alert('ALL GAMES PLAYED')
+        }
     }
     // if not, change top bar and if it computer's turn, make a move
     else {
         changeGameInfo();
+        gameBoardsHistory.push(htmlBoardToJson())
         computerMove();
     }
 }
@@ -400,9 +409,9 @@ function setEndOfGameAppearance(winnerWhite, forWhite) {
 
 function congratsToWinner() {
     // determines the winner, selects top left corner game info and changes text, set classes for pieces left depending on who won
-    const winnerWhite = determineWinner();
+    const hasWhiteWon = determineWinner();
     const whoToMove = document.querySelector(".game-info__who-to-move");
-    switch (winnerWhite) {
+    switch (hasWhiteWon) {
         case true:
             whoToMove.innerHTML = '<span class="white">White</span> won!';
             break;
@@ -413,11 +422,12 @@ function congratsToWinner() {
             whoToMove.innerHTML = "It is a <span>Draw</span>!";
     }
     for (let forWhite of [true, false]) {
-        setEndOfGameAppearance(winnerWhite, forWhite);
+        setEndOfGameAppearance(hasWhiteWon, forWhite);
     }
+    return hasWhiteWon
 }
 
-function endOfGame() {
+function isGameOver() {
     // checks if requirements for game ending occured - is player about to move have any pieces, if has any possible moves or there were 30 moves of queens without any capture in a row, if nothing of these, return false
     const selector = isWhiteToMove ? ".piece--white" : ".piece--black";
     const stillPieces = document.querySelectorAll(selector).length;
@@ -527,6 +537,7 @@ function resetGlobalVariables() {
     queenMovesWithoutCaptureCount = 0;
     pieceAboutToChainCapture = null;
     forbiddenDirectionForQueenCapture = [null, null];
+    gameBoardsHistory = [];
 }
 
 function generateGraveyards() {
@@ -575,7 +586,8 @@ async function generateTitleWindow() {
     await sleep(1_000);
     container.remove();
     main.innerHTML = "";
-    startGame()
+    createJsonFile();
+    startGame();
 }
 
 async function startGame() {
@@ -599,4 +611,8 @@ let queenMovesWithoutCaptureCount = 0;
 let pieceAboutToChainCapture = null;
 let forbiddenDirectionForQueenCapture = [null, null];
 const MOVE_ANIMATION_DURATION_MS = 100;
+let gameBoardsHistory = []
+let gamesPlayedCount = 1;
+const MAX_GAMES_TO_PLAY = 10_000;
+
 generateTitleWindow();
