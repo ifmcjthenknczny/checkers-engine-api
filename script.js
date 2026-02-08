@@ -9,56 +9,30 @@ import {
     pickAMove
 } from './ai.js';
 
-// turns
-async function makeAMove() {
-    // selects clicked piece and checks if the square is legal to move - if there is no piece clicked or the square is not legal to move or itsComputerTurn - ends function, if not - prevents any other moves
-    const clickedPiece = document.querySelector("#piece-clicked");
-    const legalSquare =
-        this.firstElementChild &&
-        this.firstElementChild.classList.contains("legal-move");
-    // set queen-connected variables and if the piece is about to capture, remove the captured piece and legal move marks on squares, move piece and wait for transition to finish
-    setQueenVariables(clickedPiece, this);
-    if (forcedCapture)
-        removeCapturedPiece(
-            findSquareOfAPieceToCapture(clickedPiece.parentElement, this)
-        );
-    movePiece(clickedPiece.parentElement, this, MOVE_ANIMATION_DURATION_MS);
-    await sleep(MOVE_ANIMATION_DURATION_MS);
-    // checks if piece can capture again, then sets variable to this piece (and that turns off clicking other pieces of player) and continue turn, else check for promotion, unhold piece and ends turn
-    if (forcedCapture && legalCapturesOfPiece(clickedPiece).length > 0)
-        chainedCapturePiece = clickedPiece;
-    else {
-        if (promotion(clickedPiece)) {
-            crownTheQueen(clickedPiece);
-        }
-        await endTurn();
-    }
-}
-
 async function computerMove() {
     // declares variables which values are about to be determined. if it is not between multiple, chained captures - pick a piece and move from all computer pieces, else randomly pick a capture of only this piece which is inbetween captures
     let pieceToMove, targetSquare;
-    if (!chainedCapturePiece) {
+    if (!pieceAboutToChainCapture) {
         [pieceToMove, targetSquare] = pickAMove(
-            findAllLegalMoves(whiteToMove)
+            findAllLegalMoves(isWhiteToMove)
         );
     } else {
-        pieceToMove = chainedCapturePiece;
+        pieceToMove = pieceAboutToChainCapture;
         const legalCaptures = legalCapturesOfPiece(pieceToMove);
         targetSquare =
             legalCaptures[Math.floor(Math.random() * legalCaptures.length)];
     }
     // set queen-connected variables, remove piece if it was a capture, animate piece move and wait for animation to finish
     setQueenVariables(pieceToMove, targetSquare);
-    if (forcedCapture)
+    if (isForcedCapture)
         removeCapturedPiece(
             findSquareOfAPieceToCapture(pieceToMove.parentElement, targetSquare)
         );
     movePiece(pieceToMove.parentElement, targetSquare, MOVE_ANIMATION_DURATION_MS);
     await sleep(MOVE_ANIMATION_DURATION_MS);
     // piece can capture again then set chainedCapturePiece to this piece, so it will move again and call computerMove again, else check fro promotion and endTurn
-    if (forcedCapture && legalCapturesOfPiece(pieceToMove).length > 0) {
-        chainedCapturePiece = pieceToMove;
+    if (isForcedCapture && legalCapturesOfPiece(pieceToMove).length > 0) {
+        pieceAboutToChainCapture = pieceToMove;
         computerMove();
     } else {
         if (promotion(pieceToMove)) {
@@ -71,12 +45,12 @@ async function computerMove() {
 function setQueenVariables(pieceToMove, targetSquare) {
     // checks if clicked piece is a queen and is about to capture - and sets onlyQueenMovesWithoutCapture accordingly, as well as setting the direction in which queen can't capture in next chained move
     const isQueen = pieceToMove.classList.contains("piece--queen");
-    isQueen && !forcedCapture ?
-        onlyQueenMovesWithoutCapture++
+    isQueen && !isForcedCapture ?
+        queenMovesWithoutCaptureCount++
         :
-        (onlyQueenMovesWithoutCapture = 0);
-    queenCaptureForbiddenDirection =
-        isQueen && forcedCapture ?
+        (queenMovesWithoutCaptureCount = 0);
+    forbiddenDirectionForQueenCapture =
+        isQueen && isForcedCapture ?
         findQueenCaptureForbiddenDirection(
             pieceToMove.parentElement,
             targetSquare
@@ -85,9 +59,9 @@ function setQueenVariables(pieceToMove, targetSquare) {
 
 async function endTurn() {
     // change the move turn to other piece color, reset move-connected variables
-    whiteToMove = !whiteToMove;
-    chainedCapturePiece = null;
-    queenCaptureForbiddenDirection = [null, null];
+    isWhiteToMove = !isWhiteToMove;
+    pieceAboutToChainCapture = null;
+    forbiddenDirectionForQueenCapture = [null, null];
     // if it is end of game, do what you gotta do when game ends
     if (endOfGame()) {
         congratsToWinner();
@@ -106,8 +80,8 @@ function changeGameInfo() {
     const whoToMove = document.querySelector(".game-info__who-to-move span");
     whoToMove.classList.toggle("white");
     // change text, if white are to move, change turn counter as well
-    if (whiteToMove) {
-        document.querySelector(".game-info__turn-counter span").innerText = ++turn;
+    if (isWhiteToMove) {
+        document.querySelector(".game-info__turn-counter span").innerText = ++turnNumber;
         whoToMove.innerText = "White";
     } else whoToMove.innerText = "Black";
 }
@@ -133,13 +107,13 @@ async function movePiece(startSquare, targetSquare, transitionTimeMs) {
         +window
         .getComputedStyle(document.querySelector(".grid__square"))
         .border.split("px")[0];
-    const boardPositionCoeff = whitesOnBottom ? 1 : -1;
+    const BOARD_POSITION_COEFF = 1;
     const transX =
-        (targetColIndex - startColIndex) * squareWidth * boardPositionCoeff;
+        (targetColIndex - startColIndex) * squareWidth * BOARD_POSITION_COEFF;
     const transY =
-        (startRowIndex - targetRowIndex) * squareWidth * boardPositionCoeff;
+        (startRowIndex - targetRowIndex) * squareWidth * BOARD_POSITION_COEFF;
     // if another, chained capture will be possible, generate legal move before the actual transition
-    if (forcedCapture) {
+    if (isForcedCapture) {
         const dummyPiece = pieceToMove.cloneNode(true);
         targetSquare.appendChild(dummyPiece);
         dummyPiece.remove();
@@ -203,8 +177,8 @@ function legalCapturesOfPiece(piece) {
         for (let colsIncrease of [true, false]) {
             if (
                 isQueen &&
-                queenCaptureForbiddenDirection[0] === colsIncrease &&
-                queenCaptureForbiddenDirection[1] === rowsIncrease
+                forbiddenDirectionForQueenCapture[0] === colsIncrease &&
+                forbiddenDirectionForQueenCapture[1] === rowsIncrease
             )
                 continue;
             // sets boundaries and increment or decrement for iterable variable
@@ -313,7 +287,7 @@ function findSquareOfAPieceToCapture(startSquare, targetSquare) {
         cols.indexOf(startCol),
         cols.indexOf(targetCol)
     );
-    const classToCapture = whiteToMove ? "piece--black" : "piece--white";
+    const classToCapture = isWhiteToMove ? "piece--black" : "piece--white";
     let i = 0;
     // because it is diagonal, both Array.length are equal
     while (i < rowIterable.length) {
@@ -347,7 +321,7 @@ function addPieceToGraveyard(isPieceWhite, isQueen) {
         pieceMini.classList.add("mini-piece--black");
     pieceMini.classList.add("mini-piece");
     const targetGraveyard =
-        (isPieceWhite && whitesOnBottom) || (!isPieceWhite && !whitesOnBottom) ?
+        isPieceWhite ?
         ".captured-pieces--top" :
         ".captured-pieces--bottom";
     document.querySelector(targetGraveyard).appendChild(pieceMini);
@@ -369,15 +343,15 @@ function promotion(piece) {
 
 function isThereACapturePossibility() {
     // selects all pieces that are about to move and checks if any of them can capture another piece, returns true/false
-    const selector = whiteToMove ? ".piece--white" : ".piece--black";
+    const selector = isWhiteToMove ? ".piece--white" : ".piece--black";
     const allColorPieces = document.querySelectorAll(selector);
     for (let piece of allColorPieces) {
         if (legalCapturesOfPiece(piece).length > 0) {
-            forcedCapture = true;
+            isForcedCapture = true;
             return true;
         }
     }
-    forcedCapture = false;
+    isForcedCapture = false;
     return false;
 }
 
@@ -389,14 +363,14 @@ function determineWinner() {
         !document.querySelector(".piece--black") ||
         (!!document.querySelector(".piece--black") &&
             Object.keys(findAllLegalMoves(false)).length === 0 &&
-            !whiteToMove)
+            !isWhiteToMove)
     )
         winnerWhite = true;
     else if (
         !document.querySelector(".piece--white") ||
         (!!document.querySelector(".piece--white") &&
             Object.keys(findAllLegalMoves(true)).length === 0 &&
-            whiteToMove)
+            isWhiteToMove)
     )
         winnerWhite = false;
     return winnerWhite;
@@ -445,11 +419,11 @@ function congratsToWinner() {
 
 function endOfGame() {
     // checks if requirements for game ending occured - is player about to move have any pieces, if has any possible moves or there were 30 moves of queens without any capture in a row, if nothing of these, return false
-    const selector = whiteToMove ? ".piece--white" : ".piece--black";
+    const selector = isWhiteToMove ? ".piece--white" : ".piece--black";
     const stillPieces = document.querySelectorAll(selector).length;
     if (stillPieces === 0) return true;
-    if (Object.keys(findAllLegalMoves(whiteToMove)).length === 0) return true;
-    if (onlyQueenMovesWithoutCapture >= 30) return true;
+    if (Object.keys(findAllLegalMoves(isWhiteToMove)).length === 0) return true;
+    if (queenMovesWithoutCaptureCount >= 30) return true;
     return false;
 }
 
@@ -464,8 +438,8 @@ function generateBoard(size) {
     grid.style.gridTemplateColumns = `0.2fr repeat(${size}, 1fr`;
     grid.style.gridTemplateRows = `repeat(${size}, 1fr) 0.2fr`;
     // sets order of rows and cols depending on board orientation
-    const rowOrder = whitesOnBottom ? [...rows].reverse() : [...rows];
-    const colOrder = whitesOnBottom ? [...cols] : [...cols].reverse();
+    const rowOrder = [...rows].reverse();
+    const colOrder = [...cols];
     // for every new row, change color of first sqaure, create square with name and append it as first
     for (let rowName of rowOrder) {
         whiteSquare = !whiteSquare;
@@ -486,7 +460,6 @@ function generateBoard(size) {
                 square.classList.add("grid__square--white");
             } else {
                 square.classList.add("grid__square--black");
-                square.addEventListener("click", makeAMove);
             }
             // append square and change color of squares between cols
             grid.appendChild(square);
@@ -522,7 +495,6 @@ function generateStartingPosition(board) {
         rowNames[0] === "1" ? +rowNames[rowNames.length - 1] : +rowNames[0];
     const blackSquares = document.querySelectorAll(".grid__square--black");
     const order = ["piece--black", "piece--white"];
-    if (!whitesOnBottom) order.reverse();
     // loops over the board and add pieces along with their classes and events - pieceHold for player color and pieceUnhold for computer color - to the board
     for (let i = 0; i < blackSquares.length; i++) {
         if (i < ((size / 2 - 1) * size) / 2) {
@@ -549,12 +521,12 @@ function resetGame() {
 
 function resetGlobalVariables() {
     // resets all global variables to initial level
-    whiteToMove = true;
-    turn = 1;
-    forcedCapture = false;
-    onlyQueenMovesWithoutCapture = 0;
-    chainedCapturePiece = null;
-    queenCaptureForbiddenDirection = [null, null];
+    isWhiteToMove = true;
+    turnNumber = 1;
+    isForcedCapture = false;
+    queenMovesWithoutCaptureCount = 0;
+    pieceAboutToChainCapture = null;
+    forbiddenDirectionForQueenCapture = [null, null];
 }
 
 function generateGraveyards() {
@@ -620,12 +592,11 @@ async function startGame() {
 const BOARD_SIZE = 8;
 const cols = range(BOARD_SIZE, "a");
 const rows = range(BOARD_SIZE, 1);
-let turn = 1;
-let forcedCapture = false;
-let whiteToMove = true;
-let whitesOnBottom = true;
-let onlyQueenMovesWithoutCapture = 0;
-let chainedCapturePiece = null;
-let queenCaptureForbiddenDirection = [null, null];
+let turnNumber = 1;
+let isForcedCapture = false;
+let isWhiteToMove = true;
+let queenMovesWithoutCaptureCount = 0;
+let pieceAboutToChainCapture = null;
+let forbiddenDirectionForQueenCapture = [null, null];
 const MOVE_ANIMATION_DURATION_MS = 100;
 generateTitleWindow();
