@@ -11,3 +11,6 @@ node_modules/**
 *.pth
 .venv/**
 .venv
+dist
+dist/**
+README.md
