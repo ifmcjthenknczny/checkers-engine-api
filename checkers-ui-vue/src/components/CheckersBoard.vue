@@ -43,7 +43,6 @@ import { BOARD_SIZE } from '../config';
 import { range, rangeChar } from "../helpers";
 import { useBoardStore } from '@/stores/boardState';
 import CheckersPiece from './CheckersPiece.vue';
-import type { SquareContent } from '@/types';
 
 const cols = rangeChar(BOARD_SIZE, "a");
 const rows = range(BOARD_SIZE, 1);

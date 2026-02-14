@@ -5,7 +5,7 @@ interface Props {
   piece?: SquareContent
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const isQueen = (piece?: SquareContent) => {
   return piece && Math.abs(piece) === 3
