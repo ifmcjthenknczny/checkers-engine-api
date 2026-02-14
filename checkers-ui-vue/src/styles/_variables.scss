@@ -1,21 +1,16 @@
-@use "sass:color";
+@use 'sass:color';
 
 $boardSizeVertical: 90vw;
 $boardSizeHorizontal: 80vh;
 $nameSquareSizeVertical: calc(20 / 740 * $boardSizeVertical);
 $nameSquareSizeHorizontal: calc(20 / 740 * $boardSizeHorizontal);
 
-$pieceSize: calc(2/3 * 100%);
+$pieceSize: calc(2 / 3 * 100%);
 
 $minipieceSize: 6px;
 
-$globalFont: 'Segoe UI',
-Tahoma,
-Geneva,
-Verdana,
-sans-serif;
-$secondaryFont: 'Cousine',
-monospace;
+$globalFont: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+$secondaryFont: 'Cousine', monospace;
 
 $blackSquareColor: rgba(170, 170, 170, 0.7);
 $whiteSquareColor: rgba(255, 255, 255, 0.7);

@@ -31,5 +31,13 @@ export const useBoardStore = defineStore('board', () => {
     board.value[fromIndex] = 0
   }
 
-  return { board, setBoardState, currentPlayer, switchPlayer, movePiece }
+  function addPiece(piece: SquareContent, toIndex: number) {
+    board.value[toIndex] = piece
+  }
+
+  function removePiece(fromIndex: number) {
+    board.value[fromIndex] = 0
+  }
+
+  return { board, setBoardState, currentPlayer, switchPlayer, movePiece, addPiece, removePiece }
 })

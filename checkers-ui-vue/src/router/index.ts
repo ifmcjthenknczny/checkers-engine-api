@@ -5,12 +5,14 @@ const MAIN_PAGE_TITLE = 'WARCABY'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [{
+  routes: [
+    {
       path: '/',
       name: 'home',
       component: AnalysisPage,
-      meta: { title: `${MAIN_PAGE_TITLE} - Analiza` }
-    },],
+      meta: { title: `${MAIN_PAGE_TITLE} - Analiza` },
+    },
+  ],
 })
 
 router.beforeEach((to, from, next) => {
