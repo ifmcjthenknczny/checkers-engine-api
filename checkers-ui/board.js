@@ -1,4 +1,4 @@
-import {BOARD_SIZE, cols, rows} from './config.js'
+import {cols, rows} from './config.js'
 
 function generateBoard(size) {
     // start from creating black square, creates sections for DOM, adds appropriate class

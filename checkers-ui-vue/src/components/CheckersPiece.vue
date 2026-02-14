@@ -1,0 +1,136 @@
+<script setup lang="ts">
+import type { SquareContent } from '@/types';
+
+interface Props {
+  piece?: SquareContent
+}
+
+const props = defineProps<Props>();
+
+const isQueen = (piece?: SquareContent) => {
+  return piece && Math.abs(piece) === 3
+}
+
+const toClassNameList = (piece?: SquareContent) => {
+  if (!piece) {
+    return ""
+  }
+  return piece < 0 ? ["piece", "piece--black"] : ["piece", "piece--white"]
+}
+
+const toDecorationClassNameList = (piece?: SquareContent) => {
+  return isQueen(piece) ? "piece--queen-decoration" : ""
+}
+</script>
+<template>
+<div
+    v-if="piece !== 0"
+    :class="toClassNameList(piece)"
+  >
+    <div v-if="isQueen(piece)" :class="toDecorationClassNameList(piece)" />
+  </div>
+</template>
+<style lang="scss" scoped>
+.piece {
+    width: $pieceSize;
+    height: $pieceSize;
+    border-radius: 50%;
+    border: 2.5px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--black {
+        background-color: black;
+        border-color: white;
+
+        & .piece--queen-decoration {
+            border-color: white;
+            background-color: mix(darkgrey, black, 50%);
+        }
+
+        &.piece--can-move {
+            background-color: darken(mix(aqua, violet), 10%);
+        }
+
+        & .piece--can-move {
+            background-color: darken(mix(aqua, violet), 10%);
+        }
+    }
+
+    &--white {
+        background-color: white;
+        border-color: black;
+
+        & .piece--queen-decoration {
+            border-color: black;
+            background-color: mix(lightgrey, grey, 70%);
+        }
+
+        &.piece--can-move {
+            background-color: mix(aqua, violet);
+        }
+
+        & .piece--can-move {
+            background-color: darken(mix(aqua, violet), 20%);
+        }
+    }
+
+    &--queen-decoration {
+        border-radius: 50%;
+        width: $pieceSize / 1.5;
+        height: $pieceSize / 1.5;
+        border: 1.5px solid;
+
+        &-won {
+            border-radius: 50%;
+            width: $pieceSize / 1.5;
+            height: $pieceSize / 1.5;
+            border: 1.5px solid;
+            background-color: darken($clickedColor, 25%);
+        }
+
+        &-lost {
+            border-radius: 50%;
+            width: $pieceSize / 1.5;
+            height: $pieceSize / 1.5;
+            border: 1.5px solid;
+            background-color: darken($blackSquareColor, 20%);
+        }
+    }
+
+    &--won {
+        background-color: darken($clickedColor, 10%);
+        border-color: black;
+    }
+
+    &--lost {
+        background-color: darken($blackSquareColor,10%);
+        border-color: black;
+    }
+}
+
+.piece-hover:hover .piece--queen-decoration,
+#piece-clicked .piece--queen-decoration,
+.piece-hover:hover .piece--queen-decoration {
+    background-color: darken($clickedColor, 20%);
+    transition: background-color colorTransitionTime;
+}
+
+.piece-hover:hover,
+#piece-clicked,
+.piece-hover:active {
+    background-color: $clickedColor;
+    transition: background-color $colorTransitionTime;
+}
+
+@media (max-width: 700px) {
+    .piece {
+        border-width: 1.7px;
+
+        &--queen-decoration {
+            border-width: 1.2px;
+        }
+    }
+}
+</style>
