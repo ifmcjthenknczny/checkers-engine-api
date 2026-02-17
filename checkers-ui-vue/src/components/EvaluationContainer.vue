@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import EngineEvaluation from './EngineEvaluation.vue'
-import MoveInputGroup from './MoveInputGroup.vue'
+import MoveInput from './MoveInput.vue'
 </script>
 
 <template>
-  <EngineEvaluation />
-  <MoveInputGroup />
+  <div class="eval-block">
+    <MoveInput />
+    <EngineEvaluation />
+  </div>
 </template>
+
+<style lang="scss" scoped>
+.eval-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 280px;
+  min-width: 0;
+}
+</style>

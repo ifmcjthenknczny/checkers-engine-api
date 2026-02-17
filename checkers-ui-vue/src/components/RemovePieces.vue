@@ -1,46 +1,58 @@
 <script setup lang="ts">
-// import { ref } from 'vue'
+import { inject, type ComputedRef } from 'vue'
 import { useBoardStore } from '@/stores/boardStore'
 
+const tileColor = inject<ComputedRef<'black' | 'white'> | undefined>('tileColor')
 const { removeAllPieces } = useBoardStore()
-// const isShaking = ref(false)
 
 const handleArmageddon = () => {
-  // isShaking.value = true
   removeAllPieces()
-
-  // setTimeout(() => {
-  //   isShaking.value = false
-  // }, 500)
 }
 </script>
 
 <template>
-  <button class="armageddon-btn" @click="handleArmageddon">☄️</button>
+  <button
+    class="armageddon-btn"
+    :class="tileColor ? `armageddon-btn--${tileColor.value}` : ''"
+    @click="handleArmageddon"
+    title="Usuń wszystkie pionki"
+  >
+    <svg class="armageddon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  </button>
 </template>
-
-<style lang="scss">
-// .shake-it {
-//   animation: board-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-// }
-
-// @keyframes board-shake {
-//   10%, 90% { transform: translate3d(-1px, 0, 0); }
-//   20%, 80% { transform: translate3d(2px, 0, 0); }
-//   30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-//   40%, 60% { transform: translate3d(4px, 0, 0); }
-// }
-</style>
 
 <style lang="scss" scoped>
 .armageddon-btn {
   all: unset;
   cursor: pointer;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 
   &:hover {
     filter: brightness(1.2);
     transform: scale(1.02);
   }
+}
+
+.armageddon-icon {
+  width: $pieceSize;
+  height: $pieceSize;
+  color: #333;
+}
+
+.armageddon-btn--black .armageddon-icon {
+  color: #fff;
+}
+
+.armageddon-btn--white .armageddon-icon {
+  color: #333;
 }
 </style>

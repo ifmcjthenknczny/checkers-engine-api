@@ -21,17 +21,16 @@ body {
 main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
   width: 100%;
+  min-height: 0;
 }
 
 @media (min-width: 700px) {
   html {
     font-size: 20px;
-  }
-
-  main {
-    flex-direction: row;
   }
 }
 </style>

@@ -6,13 +6,11 @@ import { storeToRefs } from 'pinia'
 const boardStore = useBoardStore()
 const { currentPlayer } = storeToRefs(boardStore)
 
-const label = computed(() => (currentPlayer.value === 'white' ? 'Białe' : 'Czarne'))
+const label = computed(() => (currentPlayer.value === 'white' ? 'Ruch białych' : 'Ruch czarnych'))
 </script>
 
 <template>
-  <div class="game-info">
-    <div class="game-info__who-to-move">
-      RUCH:
+    <div class="game-info game-info__who-to-move">
       <button
         class="toggle-button"
         :class="{ 'is-black': currentPlayer === 'black' }"
@@ -25,23 +23,21 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'Białe' : 'Czar
         </div>
       </button>
     </div>
-  </div>
 </template>
 
 <style lang="scss" scoped>
 .game-info {
+  min-width: 160px;
   display: flex;
   flex-direction: row;
-  justify-content: end;
+  justify-content: center;
   text-transform: uppercase;
   font-weight: 550;
-  width: $boardSizeHorizontal;
+  width: 100%;
   font-size: 1rem;
   align-items: center;
 
   &__who-to-move {
-    margin-right: auto;
-    margin-left: $nameSquareSizeHorizontal;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -49,9 +45,10 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'Białe' : 'Czar
     span {
       font-weight: 700;
       color: black;
-      transition: all 0.3s ease;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
       display: inline-block;
-      min-width: 60px;
+      min-width: 5.5em;
+      text-align: left;
 
       &.white {
         color: white;
@@ -70,6 +67,11 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'Białe' : 'Czar
   align-items: center;
   padding: 0;
   outline: none;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
 
   .toggle-track {
     width: 44px;
@@ -110,12 +112,7 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'Białe' : 'Czar
 
 @media (max-width: 700px) {
   .game-info {
-    width: $boardSizeVertical;
-    font-size: 1.4rem;
-
-    &__who-to-move {
-      margin-left: $nameSquareSizeVertical;
-    }
+    font-size: 1rem;
   }
 }
 </style>
