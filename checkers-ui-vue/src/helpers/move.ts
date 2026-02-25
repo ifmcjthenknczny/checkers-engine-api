@@ -1,4 +1,4 @@
-import type { BoardPosition } from '../types'
+import type { BoardPosition, Piece, PieceColor, Player } from '../types'
 import {
   indexToRowCol,
   isQueen as isQueenPiece,
@@ -8,6 +8,7 @@ import {
   isSameColor,
   isInBounds,
   isPlayableSquare,
+  getPiecesOfColor,
 } from './board'
 
 
@@ -57,14 +58,16 @@ export function findLegalCapturesOfPiece(
 
 export function findLegalNormalMovesOfPiece(
   board: BoardPosition,
-  fromIndex: number,
+  pieceIndex: number,
 ): number[] {
-  const piece = board[fromIndex]
-  if (!piece) return []
+  const piece = board[pieceIndex]
+  if (!piece) {
+    return []
+  }
   const isQueen = isQueenPiece(piece)
   const isWhitePiece = getPieceColor(piece) === 'white'
   const rowDirs = isQueen ? [true, false] : isWhitePiece ? [true] : [false]
-  const { row: startRow, col: startCol } = indexToRowCol(fromIndex)
+  const { row: startRow, col: startCol } = indexToRowCol(pieceIndex)
   const targets: number[] = []
 
   for (const rowsInc of rowDirs) {
@@ -86,33 +89,29 @@ export function findLegalNormalMovesOfPiece(
   return targets
 }
 
-export function hasCapturePossibility(
+export function playerHasCapturePossibility(
   board: BoardPosition,
-  isWhiteToMove: boolean,
+  playerColor: Player,
 ): boolean {
-  for (let i = 0; i < board.length; i++) {
-    const p = board[i]
-    if (p === 0 || (p > 0) !== isWhiteToMove) continue
-    if (findLegalCapturesOfPiece(board, i).length > 0) return true
-  }
-  return false
+  const pieces = getPiecesOfColor(board, playerColor)
+
+  return pieces.some((piece) => findLegalCapturesOfPiece(board, piece.index).length > 0)
 }
 
 export function findAllLegalMoves(
   board: BoardPosition,
-  forWhite: boolean,
+  piecesColor: PieceColor,
 ): Record<number, number[]> {
-  const capturePossible = hasCapturePossibility(board, forWhite)
-  const result: Record<number, number[]> = {}
-  for (let fromIndex = 0; fromIndex < board.length; fromIndex++) {
-    const piece = board[fromIndex]
-    if (piece === 0 || (piece > 0) !== forWhite) continue
-    const moves = capturePossible
-      ? findLegalCapturesOfPiece(board, fromIndex)
-      : findLegalNormalMovesOfPiece(board, fromIndex)
-    if (moves.length > 0) result[fromIndex] = moves
-  }
-  return result
+  const isCapturePossible = playerHasCapturePossibility(board, piecesColor)
+  const pieces = getPiecesOfColor(board, piecesColor)
+
+  const moves = pieces.map((piece) => {
+    return isCapturePossible
+      ? findLegalCapturesOfPiece(board, piece.index)
+      : findLegalNormalMovesOfPiece(board, piece.index)
+  })
+
+  return moves
 }
 
 export function findQueenChainedCaptureForbiddenDirection(
@@ -128,7 +127,7 @@ export function findCapturedPieceIndex(
   board: BoardPosition,
   fromIndex: number,
   toIndex: number,
-  isWhiteToMove: boolean,
+  playerToMove: Player,
 ): number | undefined {
   const { row: sr, col: sc } = indexToRowCol(fromIndex)
   const { row: tr, col: tc } = indexToRowCol(toIndex)
@@ -136,7 +135,7 @@ export function findCapturedPieceIndex(
   const dCol = tc > sc ? 1 : -1
   let r = sr + dRow
   let c = sc + dCol
-  const isWhite = isWhiteToMove
+  const isWhite = playerToMove === 'white'
   while (r !== tr || c !== tc) {
     const idx = rowColToIndex(r, c)
     const content = board[idx]

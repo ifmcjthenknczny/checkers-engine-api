@@ -1,5 +1,5 @@
 import { BOARD_SIZE } from '../config'
-import type { PieceColor, Position, SquareContent } from '../types'
+import type { BoardPosition, Piece, PieceColor, SquareCoords, SquareContent } from '../types'
 
 export const isWhiteSquare = (rowIndex: number, colIndex: number): boolean =>
   (rowIndex + colIndex) % 2 === 0
@@ -7,7 +7,7 @@ export const isWhiteSquare = (rowIndex: number, colIndex: number): boolean =>
 export const getSquareIndex = (rowIndex: number, colIndex: number): number =>
   Math.floor((rowIndex * BOARD_SIZE + colIndex) / 2)
 
-export const indexToRowCol = (index: number): Position => {
+export const indexToRowCol = (index: number): SquareCoords => {
   const row = Math.floor(index / (BOARD_SIZE / 2))
   const col =
     row % 2 === 0
@@ -47,4 +47,13 @@ export function isInBounds(row: number, col: number): boolean {
 
 export function isPlayableSquare(row: number, col: number): boolean {
   return (row + col) % 2 === 1
+}
+
+export function getPiecesOfColor(board: BoardPosition, color: PieceColor): {index: number, piece: Piece}[] {
+  return board
+  .map((p, i) => ({ index: i, piece: p }))
+  .filter(
+    (p): p is { index: number; piece: Piece } =>
+      p.piece !== 0 && (p.piece > 0) === (color === 'white'),
+  )
 }

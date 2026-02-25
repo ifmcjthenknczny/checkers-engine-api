@@ -1,4 +1,4 @@
-import type { BoardPosition, PlayerOnMove, SquareContent } from '@/types'
+import type { BoardPosition, Player, SquareContent } from '@/types'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -12,7 +12,7 @@ const EMPTY_BOARD_STATE = Array(32).fill(0) as BoardPosition
 
 export const useBoardStore = defineStore('board', () => {
   const board = ref<BoardPosition>(STARTING_BOARD_STATE)
-  const currentPlayer = ref<PlayerOnMove>('white')
+  const currentPlayer = ref<Player>('white')
 
   function setBoardState(newBoardState: BoardPosition) {
     board.value = newBoardState
