@@ -47,27 +47,21 @@ const formatEvaluation = (val: number | null) => {
   return `${prefix}${val.toFixed(2)}`
 }
 
-const calculateBarHeight = computed(() => {
+const barStyles = computed(() => {
   if (evaluation.value === null) {
-    return 50
+    return { height: 50, width: 50 };
   }
 
-  const val = evaluation.value
-  const height = 50 - val * 50
+  const val = evaluation.value;
 
-  return Math.max(0, Math.min(100, height))
-})
+  const rawHeight = 50 - val * 50;
+  const rawWidth = 50 + val * 50;
 
-const calculateBarWidth = computed(() => {
-  if (evaluation.value === null) {
-    return 50
-  }
-
-  const val = evaluation.value
-  const width = 50 + val * 50
-
-  return Math.max(0, Math.min(100, width))
-})
+  return {
+    height: Math.max(0, Math.min(100, rawHeight)),
+    width: Math.max(0, Math.min(100, rawWidth))
+  };
+});
 </script>
 
 <template>
@@ -76,8 +70,8 @@ const calculateBarWidth = computed(() => {
       <div
         class="engine-eval__bar"
         :style="{
-          '--bar-height': `${calculateBarHeight}%`,
-          '--bar-width': `${calculateBarWidth}%`,
+          '--bar-height': `${barStyles.height}%`,
+          '--bar-width': `${barStyles.width}%`,
         }"
       ></div>
     </div>
