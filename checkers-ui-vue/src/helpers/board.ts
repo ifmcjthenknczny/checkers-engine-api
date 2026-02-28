@@ -20,7 +20,7 @@ export const rowColToIndex = (row: number, col: number): number =>
   row * (BOARD_SIZE / 2) + (row % 2 === 0 ? (col - 1) / 2 : col / 2)
 
 export const isQueen = (piece?: SquareContent): piece is -3 | 3 => {
-  return piece && Math.abs(piece) === 3
+  return !!piece && Math.abs(piece) === 3
 }
 
 export const getPieceColor = (piece?: SquareContent): PieceColor | null => {

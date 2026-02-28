@@ -5,6 +5,56 @@
 </template>
 
 <style lang="scss">
+// Współdzielone style planszy (BoardComponent i PlayPage)
+.board {
+  display: grid;
+  grid-auto-flow: row;
+  width: $boardSizeHorizontal;
+  height: $boardSizeHorizontal;
+}
+
+.grid__square {
+  aspect-ratio: 1;
+  border: 0.8px solid $borderColor;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--black {
+    background-color: $blackSquareColor;
+  }
+
+  &--white {
+    background-color: $whiteSquareColor;
+  }
+}
+
+.grid__square--name {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: $secondaryFont;
+  user-select: none;
+
+  &-col {
+    text-transform: uppercase;
+  }
+
+  &-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 700px) {
+  .board {
+    width: $boardSizeVertical;
+    height: $boardSizeVertical;
+  }
+}
+
 html {
   font-family: $globalFont;
   font-size: clamp(10px, $nameSquareSizeVertical, 20px);

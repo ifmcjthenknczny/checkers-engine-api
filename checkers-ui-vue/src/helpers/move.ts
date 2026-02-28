@@ -1,4 +1,4 @@
-import type { BoardPosition, Piece, PieceColor, Player } from '../types'
+import type { BoardPosition, PieceColor, Player } from '../types'
 import {
   indexToRowCol,
   isQueen as isQueenPiece,
@@ -42,7 +42,7 @@ export function findLegalCapturesOfPiece(
         const content = board[idx]
         if (content !== 0) {
           if (foundEnemy) break
-          if (isSameColor(content, friend)) break
+          if (isSameColor(content ?? 0, friend)) break
           foundEnemy = true
         } else if (foundEnemy) {
           targets.push(idx)
@@ -101,17 +101,26 @@ export function playerHasCapturePossibility(
 export function findAllLegalMoves(
   board: BoardPosition,
   piecesColor: PieceColor,
+  forbiddenDirection: [boolean | null, boolean | null] = [null, null],
+  chainedPieceIndex: number | null = null,
 ): Record<number, number[]> {
   const isCapturePossible = playerHasCapturePossibility(board, piecesColor)
   const pieces = getPiecesOfColor(board, piecesColor)
+  const result: Record<number, number[]> = {}
 
-  const moves = pieces.map((piece) => {
-    return isCapturePossible
+  if (chainedPieceIndex !== null) {
+    const targets = findLegalCapturesOfPiece(board, chainedPieceIndex, forbiddenDirection)
+    if (targets.length > 0) result[chainedPieceIndex] = targets
+    return result
+  }
+
+  for (const piece of pieces) {
+    const targets = isCapturePossible
       ? findLegalCapturesOfPiece(board, piece.index)
       : findLegalNormalMovesOfPiece(board, piece.index)
-  })
-
-  return moves
+    if (targets.length > 0) result[piece.index] = targets
+  }
+  return result
 }
 
 export function findQueenChainedCaptureForbiddenDirection(
@@ -139,7 +148,7 @@ export function findCapturedPieceIndex(
   while (r !== tr || c !== tc) {
     const idx = rowColToIndex(r, c)
     const content = board[idx]
-    if (content !== 0 && ((isWhite && content < 0) || (!isWhite && content > 0)))
+    if (content !== 0 && ((isWhite && (content ?? 0) < 0) || (!isWhite && (content ?? 0) > 0)))
       return idx
     r += dRow
     c += dCol
@@ -156,7 +165,7 @@ export function applyMove(
   const next = [...board] as BoardPosition
   const piece = board[fromIndex]
   next[fromIndex] = 0
-  next[toIndex] = piece
+  next[toIndex] = piece!
   if (captureIndex !== undefined) next[captureIndex] = 0
   return next
 }

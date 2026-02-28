@@ -1,4 +1,5 @@
 import AnalysisPage from '@/pages/AnalysisPage.vue'
+import PlayPage from '@/pages/PlayPage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const MAIN_PAGE_TITLE = 'WARCABY'
@@ -11,6 +12,12 @@ const router = createRouter({
       name: 'home',
       component: AnalysisPage,
       meta: { title: `${MAIN_PAGE_TITLE} - Analiza` },
+    },
+    {
+      path: '/play',
+      name: 'play',
+      component: PlayPage,
+      meta: { title: `${MAIN_PAGE_TITLE} - Gra` },
     },
   ],
 })

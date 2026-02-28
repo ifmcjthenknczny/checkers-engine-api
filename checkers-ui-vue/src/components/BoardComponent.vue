@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { BOARD_SIZE } from '../config'
 import { range, rangeChar } from '../helpers/utils'
 import { useBoardStore } from '@/stores/boardStore'
@@ -19,7 +20,7 @@ const gridStyles = {
 }
 
 const boardStore = useBoardStore()
-const { board } = storeToRefs(boardStore)
+const { board, selectedIndex } = storeToRefs(boardStore)
 const dragStore = useDragStore()
 const { draggedIndex, dragContext } = storeToRefs(dragStore)
 
@@ -41,8 +42,15 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
     boardStore.movePiece(from, to)
   }
 
+  boardStore.setSelectedIndex(null)
   dragStore.stopDrag()
 }
+
+onMounted(() => {
+  if (board.value.every((p) => p === 0)) {
+    boardStore.resetToDefault()
+  }
+})
 </script>
 
 <template>
@@ -64,6 +72,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
           v-if="!isWhiteSquare(rowIndex, colIndex)"
           :piece="board[getSquareIndex(rowIndex, colIndex)]!"
           :index="getSquareIndex(rowIndex, colIndex)"
+          :is-selected="selectedIndex === getSquareIndex(rowIndex, colIndex)"
           context="board"
         />
       </CheckersSquare>
@@ -81,36 +90,3 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
   </section>
 </template>
 
-<style lang="scss" scoped>
-.board {
-  display: grid;
-  grid-auto-flow: row;
-  width: $boardSizeHorizontal;
-  height: $boardSizeHorizontal;
-}
-
-.grid__square--name {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1rem;
-  font-family: $secondaryFont;
-  user-select: none;
-
-  &-col {
-    text-transform: uppercase;
-  }
-
-  &-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 700px) {
-  .board {
-    width: $boardSizeVertical;
-    height: $boardSizeVertical;
-  }
-}
-</style>

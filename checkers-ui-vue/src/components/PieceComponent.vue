@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import type { SquareContent } from '@/types'
 import { useDragStore, type DragContext } from '@/stores/dragStore'
+import { useBoardStore } from '@/stores/boardStore'
 import { getPieceColor, isQueen } from '@/helpers/board'
 
 interface Props {
   piece: SquareContent
   index?: number
   context: DragContext
+  isSelected?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { isSelected: false })
 
 const dragStore = useDragStore()
+const boardStore = useBoardStore()
 const drag = () => {
+  if (props.context === 'board' && props.index !== undefined) {
+    boardStore.setSelectedIndex(props.index)
+  }
   dragStore.startDrag(props.context, props.piece, props.index)
 }
 
@@ -21,7 +27,9 @@ const toClassNameList = (piece?: SquareContent) => {
   if (!color) {
     return ''
   }
-  return ['piece', `piece--${color}`]
+  const classes = ['piece', `piece--${color}`]
+  if (props.isSelected) classes.push('piece--selected')
+  return classes
 }
 
 const toDecorationClassNameList = (piece?: SquareContent) => {
@@ -29,7 +37,12 @@ const toDecorationClassNameList = (piece?: SquareContent) => {
 }
 </script>
 <template>
-  <div v-if="piece !== 0" :class="toClassNameList(piece)" draggable="true" @dragstart="drag">
+  <div
+    v-if="piece !== 0"
+    :class="toClassNameList(piece)"
+    draggable="true"
+    @dragstart="drag"
+  >
     <div v-if="isQueen(piece)" :class="toDecorationClassNameList(piece)" />
   </div>
 </template>
@@ -113,6 +126,10 @@ const toDecorationClassNameList = (piece?: SquareContent) => {
   &--lost {
     background-color: color.adjust($blackSquareColor, $lightness: -10%);
     border-color: black;
+  }
+
+  &--selected {
+    box-shadow: 0 0 0 3px $clickedColor;
   }
 }
 
