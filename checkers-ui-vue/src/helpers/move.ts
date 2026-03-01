@@ -1,4 +1,4 @@
-import type { BoardPosition, Piece, PieceColor, Player } from '../types'
+import type { BoardPosition, Move, Piece, PieceColor, Player } from '../types'
 import {
   indexToRowCol,
   isQueen as isQueenPiece,
@@ -10,19 +10,18 @@ import {
   isPlayableSquare,
   getPiecesOfColor,
 } from './board'
-
+import { shouldPromotePiece } from './promotion'
 
 export function findLegalCapturesOfPiece(
   board: BoardPosition,
   fromIndex: number,
   forbiddenDirection: [boolean | null, boolean | null] = [null, null],
-): number[] {
+): Move[] {
   const piece = board[fromIndex]
   if (!piece) return []
   const isQueen = isQueenPiece(piece)
-  const friend = piece
   const { row: startRow, col: startCol } = indexToRowCol(fromIndex)
-  const targets: number[] = []
+  const moves: Move[] = []
 
   for (const rowsInc of [true, false]) {
     for (const colsInc of [true, false]) {
@@ -36,16 +35,24 @@ export function findLegalCapturesOfPiece(
       let r = startRow + dRow
       let c = startCol + dCol
       let foundEnemy = false
+      let captureIndex: number | null = null
 
       while (isInBounds(r, c) && isPlayableSquare(r, c)) {
         const idx = rowColToIndex(r, c)
         const content = board[idx]
         if (content !== 0) {
-          if (foundEnemy) break
-          if (isSameColor(content ?? 0, friend)) break
+          if (isSameColor(content ?? 0, piece)) break
           foundEnemy = true
-        } else if (foundEnemy) {
-          targets.push(idx)
+          captureIndex = idx
+        } else if (foundEnemy && captureIndex !== null) {
+          const toIndex = idx
+          moves.push({
+            fromIndex,
+            toIndex,
+            isCapture: true,
+            captureIndex,
+            isPromotion: shouldPromotePiece(board, fromIndex, toIndex),
+          })
         }
         r += dRow
         c += dCol
@@ -53,24 +60,24 @@ export function findLegalCapturesOfPiece(
       }
     }
   }
-  return targets
+  return moves
 }
 
 export function findLegalNormalMovesOfPiece(
   board: BoardPosition,
   pieceIndex: number,
-): number[] {
+): Move[] {
   const piece = board[pieceIndex]
   if (!piece) {
     return []
   }
   const isQueen = isQueenPiece(piece)
   const isWhitePiece = getPieceColor(piece) === 'white'
-  const rowDirs = isQueen ? [true, false] : [!isWhitePiece]
+  const rowDirections = isQueen ? [true, false] : [!isWhitePiece]
   const { row: startRow, col: startCol } = indexToRowCol(pieceIndex)
-  const targets: number[] = []
+  const moves: Move[] = []
 
-  for (const rowsInc of rowDirs) {
+  for (const rowsInc of rowDirections) {
     for (const colsInc of [true, false]) {
       const [dCol, dRow] = diagonalDeltas(colsInc, rowsInc)
       let r = startRow + dRow
@@ -79,24 +86,30 @@ export function findLegalNormalMovesOfPiece(
       while (isInBounds(r, c) && isPlayableSquare(r, c)) {
         const idx = rowColToIndex(r, c)
         if (board[idx] !== 0) break
-        targets.push(idx)
+        const toIndex = idx
+        moves.push({
+          fromIndex: pieceIndex,
+          toIndex,
+          isCapture: false,
+          isPromotion: shouldPromotePiece(board, pieceIndex, toIndex),
+        })
         if (!isQueen) break
         r += dRow
         c += dCol
       }
     }
   }
-  return targets
+  return moves
 }
 
 export function findLegalMovesOfPiece(
   board: BoardPosition,
   pieceIndex: number,
   isCapturePossible: boolean,
-): number[] {
+): Move[] {
   return isCapturePossible
-      ? findLegalCapturesOfPiece(board, pieceIndex)
-      : findLegalNormalMovesOfPiece(board, pieceIndex)
+    ? findLegalCapturesOfPiece(board, pieceIndex)
+    : findLegalNormalMovesOfPiece(board, pieceIndex)
 }
 
 export function playerHasCapturePossibility(
@@ -105,19 +118,23 @@ export function playerHasCapturePossibility(
 ): boolean {
   const pieces = getPiecesOfColor(board, playerColor)
 
-  return pieces.some((piece) => findLegalCapturesOfPiece(board, piece.index).length > 0)
+  return pieces.some(
+    (piece) => findLegalCapturesOfPiece(board, piece.index).length > 0,
+  )
 }
 
 export function findAllLegalMoves(
   board: BoardPosition,
   piecesColor: PieceColor,
-): Record<number, number[]> {
+): Move[] {
   const isCapturePossible = playerHasCapturePossibility(board, piecesColor)
   const pieces = getPiecesOfColor(board, piecesColor)
-
-  const moves = pieces.map((piece) => {
-    return findLegalMovesOfPiece(board, piece.index, isCapturePossible)})
-
+  const moves: Move[] = []
+  for (const piece of pieces) {
+    moves.push(
+      ...findLegalMovesOfPiece(board, piece.index, isCapturePossible),
+    )
+  }
   return moves
 }
 

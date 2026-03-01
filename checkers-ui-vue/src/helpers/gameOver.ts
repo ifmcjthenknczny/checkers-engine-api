@@ -1,9 +1,9 @@
-import { BoardPosition, GameResult, PieceColor, Player } from "@/types"
+import type { BoardPosition, GameResult, PieceColor, Player } from "@/types"
 import { findAllLegalMoves } from "./move"
 
 function hasPlayerLost(board: BoardPosition, player: Player): boolean {
   const hasPieces = board.some((p) => player === 'white' ? p > 0 : p < 0)
-  const canMove = Object.keys(findAllLegalMoves(board, player)).length > 0
+  const canMove = findAllLegalMoves(board, player).length > 0
   return !hasPieces || (hasPieces && !canMove)
 }
 

@@ -4,23 +4,28 @@ import { BOARD_SIZE } from "@/config"
 
 export function shouldPromotePiece(
     board: BoardPosition,
+    fromIndex: number,
     toIndex: number,
-    piece: SquareContent,
   ): boolean {
-    if (isQueen(piece)) {
+    const piece = board[fromIndex]
+    if (!piece || isQueen(piece)) {
         return false
     }
     const { row } = indexToRowCol(toIndex)
-    const isWhitePiece = getPieceColor(piece) === 'white'
+    const pieceColor = getPieceColor(piece)
     return (
-      (isWhitePiece && row === BOARD_SIZE - 1) || (!isWhitePiece && row === 0)
+      (pieceColor === 'white' && row === 0) || (pieceColor === 'black' && row === BOARD_SIZE - 1)
     )
   }
   
   export function applyPromotion(board: BoardPosition, atIndex: number): BoardPosition {
     const next = [...board] as BoardPosition
     const p = next[atIndex]
-    if (p === 1) next[atIndex] = 3
-    else if (p === -1) next[atIndex] = -3
+    if (p === 1) {
+      next[atIndex] = 3
+    }
+    else if (p === -1) {
+      next[atIndex] = -3
+    }
     return next
   }

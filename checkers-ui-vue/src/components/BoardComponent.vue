@@ -35,8 +35,6 @@ const { board } = storeToRefs(boardStore)
 const dragStore = useDragStore()
 const { draggedIndex, dragContext } = storeToRefs(dragStore)
 
-console.log({draggedIndex: draggedIndex.value, dragContext: dragContext.value})
-
 const possibleMovesForDraggedPiece = computed(() => {
   if (!props.followGameBehavior || draggedIndex.value === null || dragContext.value !== 'board') {
     return []
@@ -45,7 +43,9 @@ const possibleMovesForDraggedPiece = computed(() => {
   if (!draggedPieceColor) {
     return []
   }
-  return findLegalMovesOfPiece(board.value, draggedIndex.value!, playerHasCapturePossibility(board.value, draggedPieceColor!))
+  const legalMovesOfPiece = findLegalMovesOfPiece(board.value, draggedIndex.value!, playerHasCapturePossibility(board.value, draggedPieceColor!))
+  console.log({legalMovesOfPiece})
+  return legalMovesOfPiece
 })
 
 const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
@@ -91,7 +91,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
           :index="getSquareIndex(rowIndex, colIndex)"
           context="board"
         />
-        <PossibleMoveMarker v-if="possibleMovesForDraggedPiece.includes(getSquareIndex(rowIndex, colIndex)) && !isWhiteSquare(rowIndex, colIndex)" :key="(getSquareIndex(rowIndex, colIndex))" />
+        <PossibleMoveMarker v-if="possibleMovesForDraggedPiece.some(m => m.toIndex === getSquareIndex(rowIndex, colIndex)) && !isWhiteSquare(rowIndex, colIndex)" :key="(getSquareIndex(rowIndex, colIndex))" />
       </CheckersSquare>
     </template>
 
