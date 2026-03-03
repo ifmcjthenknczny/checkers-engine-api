@@ -25,6 +25,6 @@ export type Move ={
   isPromotion: boolean
 } & ({isCapture: false} | {isCapture: true, captureIndex: number, followingChainedCaptureForbiddenDirection: [Direction, Direction]})
 
-export type GameResult = -1 | 0 | 1
+export type GameResult = Player | 'draw'
 
 export type GamePhase = 'color' | 'game'

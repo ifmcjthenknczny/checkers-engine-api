@@ -15,8 +15,8 @@ function hasPlayerLost(board: BoardPosition, player: Player): boolean {
     queenMovesWithoutCaptureCount: number,
   ): GameResult | null {
     if (hasPlayerLost(board, playerOnMove)) {
-      return playerOnMove === 'white' ? -1 : 1
+      return playerOnMove === 'white' ? 'black' : 'white'
     }
-    return queenMovesWithoutCaptureCount >= QUEEN_MOVES_WITHOUT_CAPTURE_COUNT_DRAW_THRESHOLD ? 0 : null
+    return queenMovesWithoutCaptureCount >= QUEEN_MOVES_WITHOUT_CAPTURE_COUNT_DRAW_THRESHOLD ? 'draw' : null
   }
   

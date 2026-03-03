@@ -10,6 +10,7 @@ interface Props {
   position: [number, number]
   rowName: number
   colName: string
+  boardIndex?: number
 }
 
 const props = defineProps<Props>()
@@ -33,7 +34,7 @@ const allowDrop = (e: DragEvent) => {
   }
 }
 
-const squareIndex = getSquareIndex(rowIndex, colIndex)
+const squareIndex = props.boardIndex ?? getSquareIndex(rowIndex, colIndex)
 
 const drop = (e: DragEvent) => {
   e.preventDefault()

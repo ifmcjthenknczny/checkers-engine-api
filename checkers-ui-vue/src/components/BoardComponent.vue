@@ -15,14 +15,23 @@ import PossibleMoveMarker from './PossibleMoveMarker.vue'
 const props = withDefaults(
   defineProps<{
     inGameBehavior?: boolean
+    isBoardFlipped?: boolean
   }>(),
   {
     inGameBehavior: false,
+    isBoardFlipped: false,
   }
 )
 
-const cols = rangeChar(BOARD_SIZE, 'a')
-const rows = range(BOARD_SIZE, 1).toReversed()
+const cols = computed(() => props.isBoardFlipped ? rangeChar(BOARD_SIZE, 'a').toReversed() : rangeChar(BOARD_SIZE, 'a'))
+
+const rows = computed(() => props.isBoardFlipped ? range(BOARD_SIZE, 1) : range(BOARD_SIZE, 1).toReversed())
+
+const getDisplaySquareIndex = (rowIndex: number, colIndex: number) => {
+  const boardRow = props.isBoardFlipped ? BOARD_SIZE - 1 - rowIndex : rowIndex
+  const boardCol = props.isBoardFlipped ? BOARD_SIZE - 1 - colIndex : colIndex
+  return getSquareIndex(boardRow, boardCol)
+}
 
 const gridStyles = {
   display: 'grid',
@@ -51,7 +60,7 @@ const possibleMovesForDraggedPieceMap = computed(() => {
 })
 
 const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
-  const toIndex = getSquareIndex(row, col)
+  const toIndex = getDisplaySquareIndex(row, col)
   // const pieceColor = getPieceColor(piece)
 
   // if (pieceColor === boardStore.currentPlayer) {
@@ -94,6 +103,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
       <CheckersSquare
         v-for="(colName, colIndex) in cols"
         :position="[colIndex, rowIndex]"
+        :board-index="getDisplaySquareIndex(rowIndex, colIndex)"
         :colName="colName"
         :rowName="rowName"
         :key="`${colName}${rowName}`"
@@ -101,11 +111,11 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
       >
         <CheckersPiece
           v-if="!isWhiteSquare(rowIndex, colIndex)"
-          :piece="board[getSquareIndex(rowIndex, colIndex)]!"
-          :index="getSquareIndex(rowIndex, colIndex)"
+          :piece="board[getDisplaySquareIndex(rowIndex, colIndex)]!"
+          :index="getDisplaySquareIndex(rowIndex, colIndex)"
           context="board"
         />
-        <PossibleMoveMarker v-if="Object.keys(possibleMovesForDraggedPieceMap).some(toIndex => +toIndex === getSquareIndex(rowIndex, colIndex)) && !isWhiteSquare(rowIndex, colIndex)" :key="(getSquareIndex(rowIndex, colIndex))" />
+        <PossibleMoveMarker v-if="Object.keys(possibleMovesForDraggedPieceMap).some(toIndex => +toIndex === getDisplaySquareIndex(rowIndex, colIndex)) && !isWhiteSquare(rowIndex, colIndex)" :key="getDisplaySquareIndex(rowIndex, colIndex)" />
       </CheckersSquare>
     </template>
 

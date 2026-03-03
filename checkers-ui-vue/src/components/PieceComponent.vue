@@ -36,9 +36,8 @@ const toDecorationClassNameList = (piece?: SquareContent) => {
 const canBeDragged = computed(() => {
   return !humanPlayerColor.value || humanPlayerColor.value === getPieceColor(props.piece)
 })
-
-
 </script>
+
 <template>
   <div v-if="piece !== 0" :class="toClassNameList(piece)" :draggable="canBeDragged" @dragstart="drag" @click="canBeDragged && drag">
     <div v-if="isQueen(piece)" :class="toDecorationClassNameList(piece)" />
