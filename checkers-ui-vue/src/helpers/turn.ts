@@ -1,29 +1,67 @@
 import type { BoardPosition, Move, Player } from "@/types"
-import { applyMove } from "./move"
+import { applyMove, isChainedCapturePossible } from "./move"
 import { determineGameResult } from "./gameOver"
-import { pickARandomMove } from "./ai"
+import { isQueen } from "./board"
 
-// TODO: problem z zakończeniem tury gdy jest chained capture
+type TurnCallbacks = {
+    queenMovesWithoutCaptureCountIncreaseFn: () => void
+    gameOverCallback: () => void
+    moveCallback: (move: Move) => void
+    turnOverCallback: () => void
+}
 
-const playerTurn = (board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, gameOverCallback: () => void, moveCallback: (move: Move) => void, move: Move | null) => {
+function applySingleMoveAndPossiblyEndTurn(
+    board: BoardPosition,
+    move: Move,
+    callbacks: TurnCallbacks,
+): { newBoard: BoardPosition; turnOver: boolean } {
+    const { queenMovesWithoutCaptureCountIncreaseFn, moveCallback, turnOverCallback } = callbacks
+    const newBoard = applyMove(board, move)
+    moveCallback(move)
+    const turnOver = !isChainedCapturePossible(newBoard, move)
+    if (turnOver) {
+        if (!move.isCapture && isQueen(newBoard[move.toIndex])) {
+            queenMovesWithoutCaptureCountIncreaseFn()
+        }
+        turnOverCallback()
+    }
+    return { newBoard, turnOver }
+}
+
+const playerTurn = (move: Move | null, board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: {
+    queenMovesWithoutCaptureCountIncreaseFn: () => void,
+    gameOverCallback: () => void,
+    moveCallback: (move: Move) => void,
+    turnOverCallback: () => void,
+}) => {
     const isGameOver = determineGameResult(board, playerColor, queenMovesWithoutCaptureCount)
-
     if (isGameOver) {
-        gameOverCallback()
+        callbacks.gameOverCallback()
         return
     }
-
-    const newBoard = applyMove(board, move!)
-    moveCallback(move!)
-
+    const { newBoard } = applySingleMoveAndPossiblyEndTurn(board, move!, callbacks)
     return newBoard
 }
 
-
-const computerTurn = (board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, gameOverCallback: () => void, moveCallback: (move: Move) => void) => {
-    const move = pickARandomMove(playerColor, board)
-
-    playerTurn(board, playerColor, queenMovesWithoutCaptureCount, gameOverCallback, moveCallback, move)
+const computerTurn = (board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: {
+    queenMovesWithoutCaptureCountIncreaseFn: () => void,
+    gameOverCallback: () => void,
+    moveCallback: (move: Move) => void,
+    turnOverCallback: () => void,
+    pickMoveStategy: (board: BoardPosition, playerColor: Player) => Move[],
+}) => {
+    const isGameOver = determineGameResult(board, playerColor, queenMovesWithoutCaptureCount)
+    if (isGameOver) {
+        callbacks.gameOverCallback()
+        return
+    }
+    const { pickMoveStategy, ...turnCallbacks } = callbacks
+    let currentBoard = board
+    for (const move of pickMoveStategy(board, playerColor)) {
+        const { newBoard, turnOver } = applySingleMoveAndPossiblyEndTurn(currentBoard, move, turnCallbacks)
+        currentBoard = newBoard
+        if (turnOver) return currentBoard
+    }
 }
 
 const gameOverCb = () => {

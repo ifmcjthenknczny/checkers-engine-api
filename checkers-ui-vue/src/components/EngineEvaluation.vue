@@ -3,32 +3,23 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/boardStore'
 import { useDebouncedWatch } from '@/hooks/useDebouncedWatch'
+import { useGameStore } from '@/stores/gameStore'
+import { evaluateBoard } from '@/helpers/engine'
 
 const boardStore = useBoardStore()
-const { board, currentPlayer } = storeToRefs(boardStore)
+const { board } = storeToRefs(boardStore)
+const gameStore = useGameStore()
+const { currentPlayer } = storeToRefs(gameStore)
 
 const evaluation = ref<number | null>(null)
 const isLoading = ref(false)
 
-type EvaluationResponse = {
-  status: 'success'
-  evaluation: number
-}
+
 
 const fetchEvaluation = async () => {
   isLoading.value = true
   try {
-    const response = await fetch(`${import.meta.env.VITE_BASE_ENGINE_API_URL}/evaluate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        board: board.value.toReversed(),
-        move: currentPlayer.value === 'white' ? 1 : -1,
-      }),
-    })
-
-    const data: EvaluationResponse = await response.json()
-    evaluation.value = data.evaluation
+    evaluation.value = await evaluateBoard(board.value, currentPlayer.value)
   } catch (error) {
     console.error('Engine error:', error)
   } finally {

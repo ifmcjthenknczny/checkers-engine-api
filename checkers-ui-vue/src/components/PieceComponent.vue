@@ -39,7 +39,8 @@ const canBeDragged = computed(() => {
 </script>
 
 <template>
-  <div v-if="piece !== 0" :class="toClassNameList(piece)" :draggable="canBeDragged" @dragstart="drag" @click="canBeDragged && drag">
+  <!-- TODO: Handle properly click on piece when it can be dragged -->
+  <div v-if="piece !== 0" :class="toClassNameList(piece)" :draggable="canBeDragged" @dragstart="drag">
     <div v-if="isQueen(piece)" :class="toDecorationClassNameList(piece)" />
   </div>
 </template>

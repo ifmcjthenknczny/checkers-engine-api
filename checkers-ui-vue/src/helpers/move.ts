@@ -191,6 +191,41 @@ export function findAllLegalMoves(
   return moves
 }
 
+function buildCaptureChains(board: BoardPosition, lastMove: Move): Move[][] {
+  const nextCaptures = findImmediateChainedCaptures(board, lastMove)
+
+  if (nextCaptures.length === 0) {
+    return [[]]
+  }
+
+  const chains: Move[][] = []
+  for (const capture of nextCaptures) {
+    const nextBoard = applyMove([...board], capture)
+    for (const subChain of buildCaptureChains(nextBoard, capture)) {
+      chains.push([capture, ...subChain])
+    }
+  }
+  return chains
+}
+
+export function findAllLegalContinuations(board: BoardPosition, piecesColor: PieceColor): Move[][] {
+  const moves = findAllLegalMoves(board, piecesColor)
+
+  const continuations: Move[][] = []
+  for (const move of moves) {
+    if (!move.isCapture) {
+      continuations.push([move])
+      continue
+    }
+
+    const nextBoard = applyMove([...board], move)
+    for (const chain of buildCaptureChains(nextBoard, move)) {
+      continuations.push([move, ...chain])
+    }
+  }
+  return continuations
+}
+
 export function movePieceFreely(board: BoardPosition, {fromIndex, toIndex}: Move): BoardPosition {
   const piece = board[fromIndex]
   if (!piece) {
@@ -218,5 +253,12 @@ export function applyMove(board: BoardPosition, move: Move): BoardPosition {
 }
 
 export const isChainedCapturePossible = (boardAfterMove: BoardPosition, move: Move) => {
-  return move.isCapture && findLegalCapturesOfPiece(boardAfterMove, move.toIndex, move.followingChainedCaptureForbiddenDirection).length > 0
+  return findImmediateChainedCaptures(boardAfterMove, move).length > 0
+}
+
+export const findImmediateChainedCaptures = (boardAfterMove: BoardPosition, move: Move): Move[] => {
+  if (!move.isCapture) {
+    return []
+  }
+  return findLegalCapturesOfPiece(boardAfterMove, move.toIndex, move.followingChainedCaptureForbiddenDirection)
 }
