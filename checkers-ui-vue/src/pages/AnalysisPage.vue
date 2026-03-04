@@ -6,7 +6,7 @@ import PieceToolbox from '@/components/PieceToolbox.vue'
 
 <template>
   <div class="analysis-page">
-    <Board />
+    <Board context="analysis" />
     <aside class="analysis-page__side">
       <EvaluationContainer />
       <PieceToolbox />

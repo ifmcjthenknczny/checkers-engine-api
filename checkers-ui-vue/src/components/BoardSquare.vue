@@ -1,16 +1,18 @@
 <script lang="ts" setup>
 import { getPieceColor, getSquareIndex, isWhiteSquare } from '@/helpers/board'
-import type { SquareContent } from '@/types'
+import type { BoardContext, SquareContent } from '@/types'
 import SquareWrapper from './SquareWrapper.vue'
 import { useDragStore } from '@/stores/dragStore'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/gameStore'
+import { playerMove } from '@/helpers/turn'
 
 interface Props {
   position: [number, number]
   rowName: number
   colName: string
   boardIndex?: number
+  context: BoardContext
 }
 
 const props = defineProps<Props>()
@@ -23,13 +25,14 @@ const gameStore = useGameStore()
 const { humanPlayerColor, currentPlayer } = storeToRefs(gameStore)
 
 const emit = defineEmits<{ dropPiece: [[number, number, SquareContent?]] }>()
+
 const allowDrop = (e: DragEvent) => {
-  const isPlayersPiece = activePiece.value && getPieceColor(activePiece.value) === humanPlayerColor.value || !humanPlayerColor.value
+  const isPlayersPiece = activePiece.value && getPieceColor(activePiece.value) === humanPlayerColor.value
   const isDifferentSquare = draggedIndex.value !== squareIndex
   const isPlayableSquare = !isWhiteSquare(rowIndex, colIndex)
-  const isPlayerTurn = !humanPlayerColor.value || currentPlayer.value === humanPlayerColor.value
+  const isPlayerTurn = currentPlayer.value === humanPlayerColor.value
 
-  if (isPlayableSquare && isDifferentSquare && isPlayersPiece && isPlayerTurn) {
+  if (isPlayableSquare && isDifferentSquare && ((props.context === 'game' && isPlayersPiece && isPlayerTurn) || props.context === 'analysis')) {
     e.preventDefault()
   }
 }
@@ -46,6 +49,7 @@ const drop = (e: DragEvent) => {
   } else if (dragContext.value === 'board') {
     emit('dropPiece', [colIndex, rowIndex, activePiece.value])
   }
+  // TODO: if context is game, then check if the move is legal and do playerMove
 }
 </script>
 

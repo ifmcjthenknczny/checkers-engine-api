@@ -1,10 +1,8 @@
 import type { BoardPosition, Move, Player } from "@/types"
 import { applyMove, isChainedCapturePossible } from "./move"
 import { determineGameResult } from "./gameOver"
-import { isQueen } from "./board"
 
-type TurnCallbacks = {
-    queenMovesWithoutCaptureCountIncreaseFn: () => void
+type Callbacks = {
     gameOverCallback: () => void
     moveCallback: (move: Move) => void
     turnOverCallback: () => void
@@ -13,27 +11,19 @@ type TurnCallbacks = {
 function applySingleMoveAndPossiblyEndTurn(
     board: BoardPosition,
     move: Move,
-    callbacks: TurnCallbacks,
+    callbacks: Callbacks,
 ): { newBoard: BoardPosition; turnOver: boolean } {
-    const { queenMovesWithoutCaptureCountIncreaseFn, moveCallback, turnOverCallback } = callbacks
+    const { moveCallback, turnOverCallback } = callbacks
     const newBoard = applyMove(board, move)
     moveCallback(move)
-    const turnOver = !isChainedCapturePossible(newBoard, move)
-    if (turnOver) {
-        if (!move.isCapture && isQueen(newBoard[move.toIndex])) {
-            queenMovesWithoutCaptureCountIncreaseFn()
-        }
+    const isTurnOver = !isChainedCapturePossible(newBoard, move)
+    if (isTurnOver) {
         turnOverCallback()
     }
-    return { newBoard, turnOver }
+    return { newBoard, turnOver: isTurnOver }
 }
 
-const playerTurn = (move: Move | null, board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: {
-    queenMovesWithoutCaptureCountIncreaseFn: () => void,
-    gameOverCallback: () => void,
-    moveCallback: (move: Move) => void,
-    turnOverCallback: () => void,
-}) => {
+export const playerMove = (move: Move | null, board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: Callbacks) => {
     const isGameOver = determineGameResult(board, playerColor, queenMovesWithoutCaptureCount)
     if (isGameOver) {
         callbacks.gameOverCallback()
@@ -43,36 +33,21 @@ const playerTurn = (move: Move | null, board: BoardPosition, playerColor: Player
     return newBoard
 }
 
-const computerTurn = (board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: {
-    queenMovesWithoutCaptureCountIncreaseFn: () => void,
-    gameOverCallback: () => void,
-    moveCallback: (move: Move) => void,
-    turnOverCallback: () => void,
-    pickMoveStategy: (board: BoardPosition, playerColor: Player) => Move[],
+export const computerTurn = async (board: BoardPosition, playerColor: Player, queenMovesWithoutCaptureCount: number, callbacks: Callbacks & {
+    movePickingStrategy: (board: BoardPosition, playerColor: Player) => Promise<Move[]>,
 }) => {
     const isGameOver = determineGameResult(board, playerColor, queenMovesWithoutCaptureCount)
     if (isGameOver) {
         callbacks.gameOverCallback()
         return
     }
-    const { pickMoveStategy, ...turnCallbacks } = callbacks
-    let currentBoard = board
-    for (const move of pickMoveStategy(board, playerColor)) {
+    const { movePickingStrategy, ...turnCallbacks } = callbacks
+    let currentBoard: BoardPosition = [...board]
+    for (const move of await movePickingStrategy(board, playerColor)) {
         const { newBoard, turnOver } = applySingleMoveAndPossiblyEndTurn(currentBoard, move, turnCallbacks)
-        currentBoard = newBoard
-        if (turnOver) return currentBoard
+        currentBoard = [...newBoard]
+        if (turnOver) {
+            return currentBoard
+        }
     }
-}
-
-const gameOverCb = () => {
-    // save boards with result to json
-    // podświetlić figury albo coś
-}
-
-const moveCb = (move: Move) => {
-    // increase turn number
-    // queen moves without capture streak
-    // save board
-    // zmiana playera który ma teraz ruch
-    // ogar chained capture wraz z forbidden direction
 }

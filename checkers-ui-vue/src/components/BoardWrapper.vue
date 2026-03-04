@@ -3,29 +3,39 @@ import { useGameStore } from '@/stores/gameStore'
 import BoardComponent from './BoardComponent.vue'
 import GameInfo from './GameInfo.vue'
 import PieceGraveryard from './PieceGraveryard.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useDragStore } from '@/stores/dragStore'
 import ButtonComponent from './ButtonComponent.vue'
 import ButtonContainer from './ButtonContainer.vue'
+import { storeToRefs } from 'pinia'
+import type { BoardContext } from '@/types'
+
+defineProps<{
+  context: BoardContext
+}>()
 
 const isBoardFlipped = ref<boolean>(false)
 
 const gameStore = useGameStore()
+const { humanPlayerColor } = storeToRefs(gameStore)
 const dropStore = useDragStore()
 
-// TODO: ogar button container style i click handler
 // TODO: podświetlić figurę jeśli jest bicie, a user kliknął taką która nie ma bicia
+// TODO: automatyczne obrócenie planszy jeśli gracz gra czarnymi
 
 function flipBoard() {
     isBoardFlipped.value = !isBoardFlipped.value
 }
+
+watch(() => humanPlayerColor.value, (currentValue) => {
+    isBoardFlipped.value = currentValue === 'black'
+}, { immediate: true })
 
 function resetGame() {
     gameStore.resetToDefault()
     isBoardFlipped.value = false
     dropStore.stopDrag()
 }
-
 </script>
 
 <template>
@@ -33,7 +43,7 @@ function resetGame() {
 
     <PieceGraveryard :pieceColor="isBoardFlipped ? 'black' : 'white'" />
 
-    <BoardComponent :in-game-behavior="true" :is-board-flipped="isBoardFlipped" />
+    <BoardComponent :is-board-flipped="isBoardFlipped" :context="context" />
 
     <PieceGraveryard :pieceColor="isBoardFlipped ? 'white' : 'black'" />
 

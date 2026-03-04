@@ -27,4 +27,6 @@ export type Move ={
 
 export type GameResult = Player | 'draw'
 
-export type GamePhase = 'color' | 'game'
+export type GamePhase = 'color' | 'game' | 'gameOver'
+
+export type BoardContext = 'game' | 'analysis'

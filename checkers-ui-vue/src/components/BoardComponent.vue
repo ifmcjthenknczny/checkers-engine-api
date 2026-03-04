@@ -5,7 +5,7 @@ import { useBoardStore } from '@/stores/boardStore'
 import CheckersPiece from './PieceComponent.vue'
 import CheckersSquare from './BoardSquare.vue'
 import { isWhiteSquare, getSquareIndex, getPieceColor } from '@/helpers/board'
-import type { Move, SquareContent } from '@/types'
+import type { BoardContext, Move, SquareContent } from '@/types'
 import { useDragStore } from '@/stores/dragStore'
 import { storeToRefs } from 'pinia'
 import { findLegalMovesOfPiece, playerHasCapturePossibility } from '@/helpers/move'
@@ -14,11 +14,10 @@ import PossibleMoveMarker from './PossibleMoveMarker.vue'
 
 const props = withDefaults(
   defineProps<{
-    inGameBehavior?: boolean
     isBoardFlipped?: boolean
+    context: BoardContext
   }>(),
   {
-    inGameBehavior: false,
     isBoardFlipped: false,
   }
 )
@@ -45,7 +44,7 @@ const dragStore = useDragStore()
 const { draggedIndex, dragContext } = storeToRefs(dragStore)
 
 const possibleMovesForDraggedPieceMap = computed(() => {
-  if (!props.inGameBehavior || draggedIndex.value === null || dragContext.value !== 'board') {
+  if (props.context === 'analysis' || draggedIndex.value === null || dragContext.value !== 'board') {
     return []
   }
   const draggedPieceColor = getPieceColor(board.value[draggedIndex.value!])
@@ -67,7 +66,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
   //   boardStore.switchPlayer()
   // }
 
-  if (dragContext.value === 'spawn') {
+  if (dragContext.value === 'spawn' && props.context === 'analysis') {
     if (!piece) {
       return
     }
@@ -79,7 +78,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
     if (fromIndex === null) {
       return
     }
-    if (props.inGameBehavior) {
+    if (props.context === 'game') {
       if (!possibleMovesForDraggedPieceMap.value[toIndex]) {
         return
       }
@@ -108,6 +107,7 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
         :rowName="rowName"
         :key="`${colName}${rowName}`"
         @drop-piece="drop"
+        :context="context"
       >
         <CheckersPiece
           v-if="!isWhiteSquare(rowIndex, colIndex)"
