@@ -34,6 +34,9 @@ const toDecorationClassNameList = (piece?: SquareContent) => {
 }
 
 const canBeDragged = computed(() => {
+  if (props.context === 'spawn') {
+    return true
+  }
   return !humanPlayerColor.value || humanPlayerColor.value === getPieceColor(props.piece)
 })
 </script>

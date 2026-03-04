@@ -12,7 +12,8 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   function movePiece(fromIndex: number, toIndex: number) {
-    return movePieceFreely(board.value, {fromIndex, toIndex} as Move)
+    board.value = movePieceFreely(board.value, { fromIndex, toIndex } as Move)
+    return board.value
   }
 
   function applyMove(move: Move) {
