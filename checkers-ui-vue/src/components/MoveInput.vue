@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useBoardStore } from '@/stores/boardStore'
 import { storeToRefs } from 'pinia'
+import { useGameStore } from '@/stores/gameStore'
 
-const boardStore = useBoardStore()
-const { currentPlayer } = storeToRefs(boardStore)
+const gameStore = useGameStore()
+const { currentPlayer } = storeToRefs(gameStore)
 
-const label = computed(() => (currentPlayer.value === 'white' ? 'Ruch białych' : 'Ruch czarnych'))
+
+const label = computed(() => (currentPlayer.value === 'white' ? 'White to move' : 'Black to move'))
 </script>
 
 <template>
@@ -14,7 +15,7 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'Ruch białych' 
       <button
         class="toggle-button"
         :class="{ 'is-black': currentPlayer === 'black' }"
-        @click="boardStore.switchPlayer"
+        @click="gameStore.switchPlayer"
         type="button"
       >
         <span :class="currentPlayer">{{ label }}</span>

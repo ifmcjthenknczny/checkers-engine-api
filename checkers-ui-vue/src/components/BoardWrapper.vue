@@ -5,6 +5,8 @@ import GameInfo from './GameInfo.vue'
 import PieceGraveryard from './PieceGraveryard.vue'
 import { ref } from 'vue'
 import { useDragStore } from '@/stores/dragStore'
+import ButtonComponent from './ButtonComponent.vue'
+import ButtonContainer from './ButtonContainer.vue'
 
 const isBoardFlipped = ref<boolean>(false)
 
@@ -35,21 +37,20 @@ function resetGame() {
 
     <PieceGraveryard :pieceColor="isBoardFlipped ? 'white' : 'black'" />
 
-    <section class="button-container button-container--game">
-        <button
-        type="button"
-        class="button button--reset button--game"
+    <ButtonContainer
+        type="game"
+    >
+        <ButtonComponent
+        buttonType="game"
         @click="resetGame"
         >
         restart
-        </button>
-        
-        <button
-        type="button"
-        class="button button--flip button--game"
+        </ButtonComponent>
+        <ButtonComponent
+        buttonType="game"
         @click="flipBoard"
         >
         flip board
-        </button>        
-    </section>
+        </ButtonComponent>     
+    </ButtonContainer>
 </template>

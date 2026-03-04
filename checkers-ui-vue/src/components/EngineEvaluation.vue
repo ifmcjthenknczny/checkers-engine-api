@@ -14,8 +14,6 @@ const { currentPlayer } = storeToRefs(gameStore)
 const evaluation = ref<number | null>(null)
 const isLoading = ref(false)
 
-
-
 const fetchEvaluation = async () => {
   isLoading.value = true
   try {
