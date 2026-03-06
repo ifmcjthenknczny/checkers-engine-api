@@ -5,16 +5,14 @@ import { onMounted, watch } from 'vue'
 import { useBoardStore } from '@/stores/boardStore'
 import { useGameStore } from '@/stores/gameStore'
 import { computerTurn } from '@/helpers/turn'
-import type { Move } from '@/types'
-import { getPieceColor, isQueen } from '@/helpers/board'
 import { pickBestEngineContinuation } from '@/helpers/ai'
 import { storeToRefs } from 'pinia'
 import { sleep } from '@/helpers/utils'
-import { determineGameResult } from '@/helpers/gameOver'
+import { useGameCallbacks } from '@/hooks/useGameCallbacks'
 
 const boardStore = useBoardStore()
-const { board } = storeToRefs(boardStore)
 const gameStore = useGameStore()
+const { moveCallback, turnOverCallback, gameOverCallback } = useGameCallbacks()
 const { humanPlayerColor, currentPlayer, queenMovesWithoutCaptureStreak, gamePhase } =
   storeToRefs(gameStore)
 const runtimeConfig = useRuntimeConfig()
@@ -44,34 +42,6 @@ watch(
     }
   },
 )
-
-// TODO: deduplicate with BoardSquare.vue
-function moveCallback(move: Move) {
-  const newBoard = boardStore.applyMove(move)
-  if (move.isPromotion) {
-    const color = getPieceColor(newBoard[move.toIndex])
-    if (color) {
-      gameStore.incrementPromotionsCount(color)
-    }
-  }
-  if (!move.isCapture && isQueen(newBoard[move.toIndex])) {
-    gameStore.incrementQueenMovesWithoutCaptureStreak()
-    return
-  } 
-  gameStore.resetQueenMovesWithoutCaptureStreak()
-}
-
-function turnOverCallback() {
-  gameStore.switchPlayer()
-  gameStore.incrementTurn()
-}
-
-function gameOverCallback() {
-  gameStore.setGameResult(
-    determineGameResult(board.value, currentPlayer.value, queenMovesWithoutCaptureStreak.value),
-  )
-  gameStore.setGamePhase('gameOver')
-}
 
 watch(
   [() => gamePhase.value, () => currentPlayer.value],

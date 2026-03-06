@@ -1,17 +1,17 @@
 import * as ort from 'onnxruntime-node'
 import path from 'node:path'
+import type { ModelLevel } from '~/types'
 
 let session: ort.InferenceSession | null = null
 
 // TODO: minmax depth algorithm for better predictions
 
-export async function loadModel(level = 1, modelsPath: string): Promise<void> {
+export async function loadModel(level: ModelLevel, modelsPath: string): Promise<void> {
   try {
     const modelPath = path.isAbsolute(modelsPath)
       ? path.join(modelsPath, `engine_${level}.onnx`)
       : path.join(process.cwd(), modelsPath, `engine_${level}.onnx`)
     session = await ort.InferenceSession.create(modelPath)
-    console.log(`AI position evaluation model of level ${level} loaded successfully!`)
   } catch (e) {
     console.error('[ERROR] Loading model was unsuccessful:', e)
     throw e

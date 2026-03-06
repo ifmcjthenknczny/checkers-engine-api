@@ -8,6 +8,8 @@ export default defineNuxtConfig({
   srcDir: 'src/',
   compatibilityDate: '2025-03-05',
 
+  experimental: { appManifest: false },
+
   dir: {
     server: 'src/server',
   },

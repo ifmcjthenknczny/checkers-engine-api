@@ -8,7 +8,7 @@ type EvaluationResponse = {
 export const evaluateBoard = async (
   board: BoardPosition,
   playerToMove: Player,
-  modelLevel: ModelLevel = 1
+  modelLevel: ModelLevel = 2
 ): Promise<number> => {
   const baseUrl =
   useRuntimeConfig().public.engineApiUrl ??
@@ -20,8 +20,7 @@ export const evaluateBoard = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      // wrongly trained model expects reversed board, to be fixed in next model generation
-      board: board.toReversed(),
+      board,
       move: playerToMove === 'white' ? 1 : -1,
     }),
   })

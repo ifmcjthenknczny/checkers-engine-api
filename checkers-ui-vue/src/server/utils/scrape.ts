@@ -1,10 +1,10 @@
 import { writeFileSync, appendFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import type { BoardPosition, GameResult, ModelLevel, Player } from '~/types'
+import type { BoardPosition, GameResult, Move, Player, ScrapeModelLevel } from '~/types'
 import { STARTING_BOARD_STATE, isQueen } from '~/helpers/board'
 import { applyMove } from '~/helpers/move'
 import { determineGameResult } from '~/helpers/gameOver'
-import { pickBestContinuation } from '~/helpers/ai'
+import { pickBestContinuation, pickRandomContinuation } from '~/helpers/ai'
 import { loadModel, evaluateBoardRaw } from './model'
 
 type JsonGameResult = -1 | 0 | 1
@@ -13,17 +13,22 @@ type JsonPlayerMove = 1 | -1
 export type TurnRecord = {
   board: BoardPosition
   move: JsonPlayerMove
-  eval: number
+  eval?: number
 }
 
 export type GameData = (TurnRecord & {result: JsonGameResult})[]
 
+// TODO: modelLevel parameter
 async function evaluateBoardServer(board: BoardPosition, playerToMove: Player): Promise<number> {
-  // wrongly trained model expects reversed board, matching client-side evaluateBoard
-  return evaluateBoardRaw([...board].reverse(), playerToMove === 'white' ? 1 : -1)
+  return evaluateBoardRaw(board, playerToMove === 'white' ? 1 : -1)
 }
 
 const MAX_TURNS = 300
+const EVAL_DECIMALS = 6
+
+function roundEval(value: number): number {
+  return Math.round(value * 10 ** EVAL_DECIMALS) / 10 ** EVAL_DECIMALS
+}
 
 const mapResultToJson = (result: GameResult): JsonGameResult => {
   if (result === 'white') {
@@ -39,9 +44,13 @@ function mapTurnDataToJson(turns: TurnRecord[], result: GameResult): GameData {
   return turns.map(turn => ({...turn, result: mapResultToJson(result)}))
 }
 
-export async function playGame(modelLevel: ModelLevel = 1): Promise<GameData> {
+export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<GameData> {
   const config = useRuntimeConfig()
-  await loadModel(modelLevel, config.modelsPath)
+  if (modelLevel) {
+    await loadModel(modelLevel, config.modelsPath)
+  } else {
+    randomCoefficient = 1
+  }
 
   let board: BoardPosition = [...STARTING_BOARD_STATE]
   let currentPlayer: Player = 'white'
@@ -54,7 +63,14 @@ export async function playGame(modelLevel: ModelLevel = 1): Promise<GameData> {
       return mapTurnDataToJson(turns, gameResult)
     }
 
-    const moves = await pickBestContinuation(board, currentPlayer, evaluateBoardServer)
+    let moves: Move[]
+    const shouldRandomizeMove = Math.random() < randomCoefficient
+    if (!modelLevel || shouldRandomizeMove) {
+      moves = pickRandomContinuation(board, currentPlayer)
+    } else {
+      moves = await pickBestContinuation(board, currentPlayer, evaluateBoardServer)
+    }
+
     if (moves.length === 0) {
       return mapTurnDataToJson(turns, currentPlayer === 'white' ? 'black' : 'white')
     }
@@ -70,19 +86,18 @@ export async function playGame(modelLevel: ModelLevel = 1): Promise<GameData> {
 
     currentPlayer = currentPlayer === 'white' ? 'black' : 'white'
 
-    const evaluation = await evaluateBoardServer(board, currentPlayer)
     turns.push({
       board: [...board],
       move: currentPlayer === 'white' ? 1 : -1,
-      eval: evaluation,
+      ...(modelLevel ? { eval: roundEval(await evaluateBoardServer(board, currentPlayer)) } : {}),
     })
   }
 
   return mapTurnDataToJson(turns, 'draw')
 }
 
-export async function playGames(count: number, modelLevel: ModelLevel = 1): Promise<string> {
-  const dataDir = join(process.cwd(), 'data')
+export async function playGames(count: number, modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<string> {
+  const dataDir = join(process.cwd(), '../data')
   mkdirSync(dataDir, { recursive: true })
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -91,16 +106,20 @@ export async function playGames(count: number, modelLevel: ModelLevel = 1): Prom
   writeFileSync(outputFile, '[', 'utf8')
 
   let gamesWritten = 0
+  const startTime = Date.now()
 
   try {
     for (let i = 0; i < count; i++) {
-      console.log(`[scrape] Playing game ${i + 1}/${count}...`)
+      const elapsedMs = Date.now() - startTime
+      const avgPerGame =
+        gamesWritten > 0 ? ` (avg. ${(elapsedMs / gamesWritten / 1000).toFixed(4)} s/game)` : ''
+      console.log(`[scrape] Playing game ${i + 1}/${count}${avgPerGame}...`)
+
       try {
-        const gameData = await playGame(modelLevel)
+        const gameData = await playGame(modelLevel, randomCoefficient)
         const prefix = gamesWritten > 0 ? ',' : ''
         appendFileSync(outputFile, `${prefix}${JSON.stringify(gameData).slice(1, -1)}`, 'utf8')
         gamesWritten++
-        console.log(`[scrape] Game ${i + 1} done (${gameData.length} turns)`)
       } catch (error) {
         console.error(`[scrape] Game ${i + 1} failed:`, error)
       }
@@ -109,6 +128,7 @@ export async function playGames(count: number, modelLevel: ModelLevel = 1): Prom
     appendFileSync(outputFile, ']', 'utf8')
   }
 
-  console.log(`[scrape] ${gamesWritten}/${count} games completed. Output: ${outputFile}`)
+  const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)
+  console.log(`[scrape] ${gamesWritten}/${count} games completed in ${totalSec}s. Output: ${outputFile}`)
   return outputFile
 }

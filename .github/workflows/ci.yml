@@ -38,6 +38,9 @@ jobs:
   ml-core:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ./ml-core
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +49,5 @@ jobs:
         with:
           version: "latest"
 
-      - name: Black (ml-core)
+      - name: Lint
         run: uv run black . --check
-        working-directory: ./ml-core

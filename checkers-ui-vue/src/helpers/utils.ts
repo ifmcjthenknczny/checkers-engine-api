@@ -17,3 +17,7 @@ export const chunkArray = <T>(array: T[], size: number) => {
   }
   return chunked
 }
+
+export const chooseRandomly = <T>(array: T[]) => {
+  return array[Math.floor(Math.random() * array.length)]!
+}

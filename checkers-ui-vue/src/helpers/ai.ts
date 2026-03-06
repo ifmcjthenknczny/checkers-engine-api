@@ -1,18 +1,16 @@
 import type { BoardPosition, Move, Player } from '../types'
 import { evaluateBoard } from './engine'
-import { applyMove, findAllLegalContinuations, findAllLegalMoves } from './move'
+import { applyMove, findAllLegalContinuations } from './move'
+import { chooseRandomly } from './utils'
 
 export type BoardEvaluator = (board: BoardPosition, player: Player) => Promise<number>
 
-export function pickARandomMove(
-  player: Player,
+export function pickRandomContinuation(
   board: BoardPosition,
-): Move | null {
-  const legalMoves = findAllLegalMoves(board, player)
-  if (legalMoves.length === 0) {
-    return null
-  }
-  return legalMoves[Math.floor(Math.random() * legalMoves.length)]!
+  player: Player,
+): Move[] {
+  const continuations = findAllLegalContinuations(board, player)
+  return chooseRandomly(continuations)
 }
 
 export async function pickBestContinuation(
@@ -40,8 +38,6 @@ export async function pickBestContinuation(
         : (evaluation < evaluations[bestIndex]! ? index : bestIndex),
     0,
   )
-  console.log({evaluation: evaluations[bestIndex]})
-  console.log({evaluations})
   return continuations[bestIndex] ?? []
 }
 

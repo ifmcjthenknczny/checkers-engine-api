@@ -6,7 +6,7 @@ import { type ModelLevel, MODEL_LEVELS } from '~/types'
 const ALLOWED_PIECES = [0, 1, -1, 3, -3]
 const ALLOWED_MOVES = [-1, 1]
 
-const EvalSchema = z.object({
+const BodySchema = z.object({
   board: z
     .array(z.number().int())
     .length(32, 'Array must have exactly 32 elements')
@@ -24,14 +24,13 @@ const ModelLevelSchema = z.enum(MODEL_LEVELS.map(level => level.toString()), {
 
 let modelLevelLoaded: ModelLevel | null = null
 
-export const DEFAULT_MODEL_LEVEL = 1
+export const DEFAULT_MODEL_LEVEL = MODEL_LEVELS.at(-1)!
 
 // TODO: get model depth (default is 1) from body
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const modelsPath = config.modelsPath
   const modelLevelParam = getRouterParam(event, 'modelLevel')
-  // TODO: validate model level
   const modelLevel = ModelLevelSchema.safeParse(modelLevelParam).data ? +modelLevelParam! as ModelLevel : DEFAULT_MODEL_LEVEL
 
   if (modelLevelLoaded !== modelLevel) {
@@ -39,21 +38,20 @@ export default defineEventHandler(async (event) => {
     modelLevelLoaded = modelLevel
   }
 
-  const body = await readBody(event)
-  const result = EvalSchema.safeParse(body)
+  const body = BodySchema.safeParse(await readBody(event))
 
-  if (!result.success) {
+  if (!body.success) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid input',
-      data: result.error.issues.map((issue) => ({
+      data: body.error.issues.map((issue) => ({
         path: issue.path.join('.'),
         message: issue.message,
       })),
     })
   }
 
-  const evaluation = await evaluateBoardRaw(result.data.board, result.data.move)
+  const evaluation = await evaluateBoardRaw(body.data.board, body.data.move)
 
   return {
     evaluation,
