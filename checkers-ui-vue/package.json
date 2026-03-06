@@ -1,8 +1,9 @@
 {
   "name": "checkers-ui-vue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "license": "CC-BY-NC-4.0",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",

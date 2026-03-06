@@ -1,0 +1,51 @@
+name: ci
+
+on: [push]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22.12.0"
+
+jobs:
+  checkers-ui-vue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ./checkers-ui-vue
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://npm.pkg.github.com'
+          cache: 'yarn'
+          cache-dependency-path: './yarn.lock'
+
+      - name: Install deps
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: yarn lint
+
+      - name: Build code
+        run: yarn build
+
+  ml-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Black (ml-core)
+        run: uv run black . --check
+        working-directory: ./ml-core
