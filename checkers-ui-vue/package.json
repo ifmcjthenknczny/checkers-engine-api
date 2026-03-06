@@ -11,6 +11,7 @@
     "postinstall": "nuxt prepare",
     "test:unit": "vitest",
     "type-check": "nuxt typecheck",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/"
   },
