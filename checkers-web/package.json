@@ -1,6 +1,6 @@
 {
-  "name": "checkers-ui-vue",
-  "version": "0.1.0",
+  "name": "checkers-web",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "license": "CC-BY-NC-4.0",

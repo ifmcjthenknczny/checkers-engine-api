@@ -9,12 +9,12 @@ env:
   NODE_VERSION: "22.13.0"
 
 jobs:
-  checkers-ui-vue:
+  checkers-web:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
       run:
-        working-directory: ./checkers-ui-vue
+        working-directory: ./checkers-web
     steps:
       - uses: actions/checkout@v4
 
@@ -24,7 +24,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://npm.pkg.github.com'
           cache: 'yarn'
-          cache-dependency-path: 'checkers-ui-vue/yarn.lock'
+          cache-dependency-path: 'checkers-web/yarn.lock'
 
       - name: Install deps
         run: yarn install --frozen-lockfile
