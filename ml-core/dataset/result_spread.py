@@ -1,7 +1,7 @@
 import json
 from collections import Counter
 
-INPUT_FILE_PATH = "../data/games_2026-03-06T19-01-02-689Z.json"
+INPUT_FILE_PATH = "../data/games_2026-03-07T00-11-46-433Z.json"
 
 with open(INPUT_FILE_PATH) as f:
     data = json.load(f)

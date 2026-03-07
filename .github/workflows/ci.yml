@@ -49,5 +49,8 @@ jobs:
         with:
           version: "latest"
 
+      - name: Install packages
+        run: uv sync
+
       - name: Lint
         run: uv run black . --check

@@ -40,7 +40,7 @@ function resetGame() {
 <template>
     <GameInfo />
 
-    <PieceGraveryard :pieceColor="isBoardFlipped ? 'black' : 'white'" />
+    <PieceGraveryard class="graveyard-top" :pieceColor="isBoardFlipped ? 'black' : 'white'" />
 
     <BoardComponent :is-board-flipped="isBoardFlipped" :context="context" />
 
@@ -63,3 +63,9 @@ function resetGame() {
         </ButtonComponent>     
     </ButtonContainer>
 </template>
+
+<style lang="scss" scoped>
+.graveyard-top :deep(.captured-pieces) {
+  margin-bottom: 2px;
+}
+</style>

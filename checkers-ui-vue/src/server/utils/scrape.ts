@@ -40,8 +40,18 @@ const mapResultToJson = (result: GameResult): JsonGameResult => {
   return 0
 }
 
-function mapTurnDataToJson(turns: TurnRecord[], result: GameResult): GameData {
+function mapGameDataToJson(turns: TurnRecord[], result: GameResult): GameData {
   return turns.map(turn => ({...turn, result: mapResultToJson(result)}))
+}
+
+function shouldSaveMove(moveNumber: number): boolean {
+  const turn = Math.floor(moveNumber / 2);
+  const min = 0.1;
+  const max = 1;
+  const midpoint = 12;
+  const steepness = 0.3;
+  const sigmoid = 1 / (1 + Math.exp(-steepness * (turn - midpoint)));
+  return min + (max - min) * sigmoid > Math.random();
 }
 
 export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<GameData> {
@@ -57,10 +67,10 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
   let queenMovesWithoutCaptureStreak = 0
   const turns: TurnRecord[] = []
 
-  for (let turn = 0; turn < MAX_TURNS; turn++) {
+  for (let moveNumber = 0; moveNumber < MAX_TURNS; moveNumber++) {
     const gameResult = determineGameResult(board, currentPlayer, queenMovesWithoutCaptureStreak)
     if (gameResult) {
-      return mapTurnDataToJson(turns, gameResult)
+      return mapGameDataToJson(turns, gameResult)
     }
 
     let moves: Move[]
@@ -72,7 +82,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
     }
 
     if (moves.length === 0) {
-      return mapTurnDataToJson(turns, currentPlayer === 'white' ? 'black' : 'white')
+      return mapGameDataToJson(turns, currentPlayer === 'white' ? 'black' : 'white')
     }
 
     for (const move of moves) {
@@ -86,14 +96,16 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
 
     currentPlayer = currentPlayer === 'white' ? 'black' : 'white'
 
-    turns.push({
-      board: [...board],
-      move: currentPlayer === 'white' ? 1 : -1,
-      ...(modelLevel ? { eval: roundEval(await evaluateBoardServer(board, currentPlayer)) } : {}),
-    })
+    const shouldSave = shouldSaveMove(moveNumber);
+    if (shouldSave) {
+      turns.push({
+        board: [...board],
+        move: currentPlayer === 'white' ? 1 : -1,
+        ...(modelLevel ? { eval: roundEval(await evaluateBoardServer(board, currentPlayer)) } : {}),
+      })
+    }
   }
-
-  return mapTurnDataToJson(turns, 'draw')
+  return mapGameDataToJson(turns, 'draw')
 }
 
 export async function playGames(count: number, modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<string> {

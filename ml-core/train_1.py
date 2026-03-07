@@ -1,10 +1,13 @@
+# !pip install onnx onnxruntime onnxscript
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
 import pandas as pd
 
-DATA_DIR = "/kaggle/input/datasets/KAGGLE_NICKNAME/checkers-0random"
+KAGGLE_NICKNAME = os.environ.get("KAGGLE_NICKNAME", "KAGGLE_NICKNAME")
+DATA_DIR = f"/kaggle/input/datasets/{KAGGLE_NICKNAME}/checkers-0random"
 MODELS_DIR = "/kaggle/working"
 
 INPUT_FILE_PATH = f"{DATA_DIR}/games_2026-03-06T19-01-02-689Z.json"
