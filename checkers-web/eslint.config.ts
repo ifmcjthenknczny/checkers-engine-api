@@ -16,7 +16,7 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/.nuxt/**', '**/*.js', '**/*.mjs']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
@@ -27,6 +27,13 @@ export default defineConfigWithVueTs(
   },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
+
+  {
+    files: ['**/pages/**', '**/layouts/**'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 
   skipFormatting,
 )

@@ -12,7 +12,7 @@ export const evaluateBoard = async (
 ): Promise<number> => {
   const baseUrl =
   useRuntimeConfig().public.engineApiUrl ??
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.NUXT_PUBLIC_ENGINE_API_URL) ??
+    (typeof import.meta !== 'undefined' && import.meta.env?.NUXT_PUBLIC_ENGINE_API_URL) ??
     ''
   const url = baseUrl ? `${baseUrl.replace(/\/$/, '')}/evaluate/${modelLevel}` : `/api/evaluate/${modelLevel}`
 

@@ -15,7 +15,6 @@ const gameStore = useGameStore()
 const { moveCallback, turnOverCallback, gameOverCallback } = useGameCallbacks()
 const { humanPlayerColor, currentPlayer, queenMovesWithoutCaptureStreak, gamePhase } =
   storeToRefs(gameStore)
-const runtimeConfig = useRuntimeConfig()
 
 function startGame() {
   boardStore.resetToDefault()
