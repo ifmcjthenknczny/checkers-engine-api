@@ -19,5 +19,5 @@ export const chunkArray = <T>(array: T[], size: number) => {
 }
 
 export const chooseRandomly = <T>(array: T[]) => {
-  return array[Math.floor(Math.random() * array.length)]!
+  return array[Math.floor(Math.random() * array.length)]
 }

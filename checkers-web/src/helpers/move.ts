@@ -125,7 +125,7 @@ export function findLegalNormalMovesOfPiece(
   }
 
   const isQueen = isQueenPiece(piece)
-  const pieceColor = getPieceColor(piece)!
+  const pieceColor = getPieceColor(piece)
   const { row: startRow, col: startCol } = indexToRowCol(pieceIndex)
   const directions = buildNormalMoveDirections(isQueen, pieceColor)
   const moves: Move[] = []
@@ -268,6 +268,10 @@ export const getLegalMove = (board: BoardPosition, move: Partial<Pick<Move, 'fro
   if (move.fromIndex == null || move.toIndex == null) {
     return null
   }
-  const legalMoves = findAllLegalMoves(board, getPieceColor(board[move.fromIndex])!)
+  const pieceColor = getPieceColor(board[move.fromIndex])
+  if (pieceColor === null) {
+    return null
+  }
+  const legalMoves = findAllLegalMoves(board, pieceColor)
   return legalMoves.find(legalMove => legalMove.fromIndex === move.fromIndex && legalMove.toIndex === move.toIndex) ?? null
 }

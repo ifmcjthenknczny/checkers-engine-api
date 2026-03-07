@@ -32,10 +32,15 @@ export async function pickBestContinuation(
   )
   const isMaximizing = player === 'white'
   const bestIndex = evaluations.reduce(
-    (bestIndex, evaluation, index) =>
-      isMaximizing
-        ? (evaluation > evaluations[bestIndex]! ? index : bestIndex)
-        : (evaluation < evaluations[bestIndex]! ? index : bestIndex),
+    (bestIndex, evaluation, index) => {
+      if (isMaximizing && evaluation > evaluations[bestIndex]) {
+        return index
+      }
+      if (!isMaximizing && evaluation < evaluations[bestIndex]) {
+        return index
+      }
+      return bestIndex
+    },
     0,
   )
   return continuations[bestIndex] ?? []

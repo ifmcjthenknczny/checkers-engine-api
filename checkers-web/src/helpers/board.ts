@@ -31,7 +31,12 @@ export const isQueen = (piece?: SquareContent): piece is -3 | 3 => {
   return !!piece && Math.abs(piece) === 3
 }
 
-export const getPieceColor = (piece?: SquareContent): PieceColor | null => {
+export function getPieceColor(piece: 0 | null | undefined): null
+export function getPieceColor(piece: Piece): PieceColor
+export function getPieceColor(piece?: SquareContent | null): PieceColor | null
+export function getPieceColor(
+  piece?: SquareContent | null,
+): PieceColor | null {
   if (!piece) {
     return null
   }

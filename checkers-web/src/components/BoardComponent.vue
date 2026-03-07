@@ -50,11 +50,11 @@ const possibleMovesForDraggedPieceMap = computed(() => {
   if (props.context === 'analysis' || draggedIndex.value === null || dragContext.value !== 'board') {
     return []
   }
-  const draggedPieceColor = getPieceColor(board.value[draggedIndex.value!])
+  const draggedPieceColor = getPieceColor(board.value[draggedIndex.value])
   if (!draggedPieceColor) {
     return []
   }
-  const legalMovesOfPiece = findLegalMovesOfPiece(board.value, draggedIndex.value!, playerHasCapturePossibility(board.value, draggedPieceColor!))
+  const legalMovesOfPiece = findLegalMovesOfPiece(board.value, draggedIndex.value, playerHasCapturePossibility(board.value, draggedPieceColor))
   return legalMovesOfPiece.reduce((acc, move) => {
     acc[move.toIndex] = move
     return acc
