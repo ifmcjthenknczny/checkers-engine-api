@@ -4,7 +4,7 @@ import { type ModelLevel, MODEL_LEVELS } from '~/types'
 
 // TODO: Map them from human form
 const ALLOWED_PIECES = [0, 1, -1, 3, -3]
-const ALLOWED_MOVES = [-1, 1]
+const ALLOWED_PLAYERS_TO_MOVE = [-1, 1]
 
 const BodySchema = z.object({
   board: z
@@ -13,8 +13,8 @@ const BodySchema = z.object({
     .refine((arr) => arr.every((val) => ALLOWED_PIECES.includes(val)), {
       message: 'Allowed values are: 0 (empty), 1/-1 (pawns), 3/-3 (queens)',
     }),
-  move: z.number().int().refine((val) => ALLOWED_MOVES.includes(val), {
-    message: 'Move must be 1 (White) or -1 (Black)',
+  move: z.number().int().refine((val) => ALLOWED_PLAYERS_TO_MOVE.includes(val), {
+    message: 'Player to move must be 1 (White) or -1 (Black)',
   }),
 })
 
