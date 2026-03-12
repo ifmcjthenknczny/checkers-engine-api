@@ -3,7 +3,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { storeToRefs } from 'pinia'
 import { getPieceColor, isQueen } from '@/helpers/board'
 import { determineGameResult } from '@/helpers/gameOver'
-import type { Move } from '@/types'
+import type { GameResult, Move } from '@/types'
 
 
 export function useGameCallbacks() {
@@ -33,9 +33,9 @@ export function useGameCallbacks() {
     gameStore.incrementMovesCount()
   }
 
-  function gameOverCallback() {
+  function gameOverCallback(gameResult: GameResult) {
     gameStore.setGameResult(
-      determineGameResult(board.value, currentPlayer.value, queenMovesWithoutCaptureStreak.value),
+      gameResult
     )
     gameStore.setGamePhase('gameOver')
   }
