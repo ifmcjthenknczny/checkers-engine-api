@@ -12,6 +12,7 @@ data
 dist
 dist/**
 .env
+.yarn
 
 # Logs
 logs

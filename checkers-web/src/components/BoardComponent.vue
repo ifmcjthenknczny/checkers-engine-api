@@ -47,21 +47,24 @@ const gameStore = useGameStore()
 const { currentPlayer, humanPlayerColor, animatingMove, isAnimating } = storeToRefs(gameStore)
 
 const movingPiecePhase = ref<'from' | 'to'>('from')
+const movingPieceContent = ref<SquareContent | null>(null)
+const movingPieceRef = ref<HTMLElement | null>(null)
 
 watch(animatingMove, (move) => {
   if (move) {
+    movingPieceContent.value = board.value[move.fromIndex]
     movingPiecePhase.value = 'from'
     nextTick(() => {
-      requestAnimationFrame(() => {
-        movingPiecePhase.value = 'to'
-      })
+      movingPieceRef.value?.getBoundingClientRect()
+      movingPiecePhase.value = 'to'
     })
+  } else {
+    movingPieceContent.value = null
   }
 })
 
 function indexToDisplayRowCol(index: number) {
   const { row: boardRow, col: boardCol } = indexToRowCol(index)
-  /* Zgodnie z getDisplaySquareIndex: gdy !isBoardFlipped, rowIndex 0 = góra = board row 0 */
   const displayRow = props.isBoardFlipped ? BOARD_SIZE - 1 - boardRow : boardRow
   const displayCol = props.isBoardFlipped ? BOARD_SIZE - 1 - boardCol : boardCol
   return { displayRow, displayCol }
@@ -72,7 +75,6 @@ const movingPieceStyle = computed(() => {
   if (!move) return {}
   const from = indexToDisplayRowCol(move.fromIndex)
   const to = indexToDisplayRowCol(move.toIndex)
-  /* Grid: 0.2fr + 8×1fr = 8.2 (kolumny), 8×1fr + 0.2fr = 8.2 (wiersze) – środek pola (col,row) w % */
   const fromLeft = (0.2 + from.displayCol + 0.5) / 8.2 * 100
   const fromTop = (from.displayRow + 0.5) / 8.2 * 100
   const toLeft = (0.2 + to.displayCol + 0.5) / 8.2 * 100
@@ -184,13 +186,14 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
       {{ colName }}
     </div>
 
-    <div v-if="animatingMove" class="board__move-overlay" aria-hidden="true">
+    <div v-if="animatingMove && movingPieceContent" class="board__move-overlay" aria-hidden="true">
       <div
+        ref="movingPieceRef"
         class="board__moving-piece"
         :style="movingPieceStyle"
       >
         <CheckersPiece
-          :piece="board[animatingMove.fromIndex]!"
+          :piece="movingPieceContent"
           context="board"
         />
       </div>
