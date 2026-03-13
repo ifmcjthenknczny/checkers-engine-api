@@ -7,8 +7,10 @@ export type SquareContent = -3 | -1 | 0 | 1 | 3
 
 export type BoardPosition = Tuple<SquareContent, 32>
 
-export type PieceColor = 'white' | 'black'
-export type Player = 'white' | 'black'
+export const COLORS = ['white', 'black'] as const
+
+export type PieceColor = typeof COLORS[number]
+export type Player = typeof COLORS[number]
 
 export type Piece = Exclude<SquareContent, 0>
 

@@ -1,24 +1,16 @@
-import { z } from 'zod'
-import { evaluateBoardRaw } from '#server/utils/model'
-import { BoardMoveSchema, DEFAULT_MODEL_LEVEL, ensureModelLoaded, parseBodyOrThrow } from '#server/utils/engine'
-import { type ModelLevel, MODEL_LEVELS } from '~/types'
-
-const ModelLevelSchema = z.enum(MODEL_LEVELS.map(level => level.toString()), {
-  message: `Model level is invalid. Must be one of: ${MODEL_LEVELS.join(', ')}`,
-})
+import { evaluateBoardRaw, ensureModelLoaded, parseModelLevel } from '#server/utils/model'
+import { BodyRequestSchema, parseBodyOrThrow } from '#server/utils/schema'
+import type { BoardPosition } from '~/types'
 
 // TODO: get model depth (default is 1) from body
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const modelLevelParam = getRouterParam(event, 'modelLevel')
-  const modelLevel = ModelLevelSchema.safeParse(modelLevelParam).data
-    ? +modelLevelParam! as ModelLevel
-    : DEFAULT_MODEL_LEVEL
+  const modelLevel = parseModelLevel(getRouterParam(event, 'modelLevel'))
 
   await ensureModelLoaded(modelLevel, config.modelsPath)
 
-  const body = await parseBodyOrThrow(event, BoardMoveSchema)
-  const evaluation = await evaluateBoardRaw(body.board, body.move)
+  const body = await parseBodyOrThrow(event, BodyRequestSchema)
+  const evaluation = await evaluateBoardRaw(body.board as BoardPosition, body.move)
 
   return { evaluation, status: 'success' }
 })

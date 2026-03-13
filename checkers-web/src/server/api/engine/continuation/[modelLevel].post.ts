@@ -1,27 +1,15 @@
-import { z } from 'zod'
-import { evaluateBoardRaw } from '#server/utils/model'
-import { BoardMoveSchema, DEFAULT_MODEL_LEVEL, ensureModelLoaded, parseBodyOrThrow } from '#server/utils/engine'
-import { type ModelLevel, MODEL_LEVELS } from '~/types'
+import { evaluateBoardRaw, ensureModelLoaded, parseModelLevel } from '#server/utils/model'
+import { BodyRequestSchema, parseBodyOrThrow } from '#server/utils/schema'
 import { findAllLegalContinuations, applyMove } from '~/helpers/move'
-import type { BoardPosition, Player } from '~/types'
-
-const ContinuationBodySchema = BoardMoveSchema.extend({
-  modelLevel: z.number().int().optional(),
-})
+import type { BoardPosition } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const body = await parseBodyOrThrow(event, ContinuationBodySchema)
-
-  const modelLevel: ModelLevel =
-    body.modelLevel != null && (MODEL_LEVELS as readonly number[]).includes(body.modelLevel)
-      ? (body.modelLevel as ModelLevel)
-      : DEFAULT_MODEL_LEVEL
+  const modelLevel = parseModelLevel(getRouterParam(event, 'modelLevel'))
 
   await ensureModelLoaded(modelLevel, config.modelsPath)
 
-  const { board, move } = body
-  const playerColor: Player = move === 1 ? 'white' : 'black'
+  const { board, move: playerColor } = await parseBodyOrThrow(event, BodyRequestSchema)
   const boardPosition = board as BoardPosition
 
   const continuations = findAllLegalContinuations(boardPosition, playerColor)
@@ -38,7 +26,7 @@ export default defineEventHandler(async (event) => {
   )
 
   const evaluations = await Promise.all(
-    resultingBoards.map((b) => evaluateBoardRaw(b as number[], move)),
+    resultingBoards.map((b) => evaluateBoardRaw(b, playerColor)),
   )
 
   const isMaximizing = playerColor === 'white'

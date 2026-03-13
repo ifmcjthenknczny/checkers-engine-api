@@ -96,7 +96,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       turns.push({
         board: [...board],
         move: currentPlayer === 'white' ? 1 : -1,
-        ...(modelLevel ? { eval: roundEval(await evaluateBoardRaw(board, currentPlayer === 'white' ? 1 : -1)) } : {}),
+        ...(modelLevel ? { eval: roundEval(await evaluateBoardRaw(board, currentPlayer)) } : {}),
       })
     }
   }

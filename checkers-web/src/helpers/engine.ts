@@ -21,7 +21,7 @@ export const evaluateBoard = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       board,
-      move: playerToMove === 'white' ? 1 : -1,
+      move: playerToMove,
     }),
   })
 
