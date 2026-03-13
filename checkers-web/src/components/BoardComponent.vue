@@ -8,7 +8,7 @@ import { isWhiteSquare, getSquareIndex, getPieceColor, indexToRowCol } from '@/h
 import type { BoardContext, Move, SquareContent } from '@/types'
 import { useDragStore } from '@/stores/dragStore'
 import { storeToRefs } from 'pinia'
-import { findLegalMovesOfPiece, playerHasCapturePossibility } from '@/helpers/move'
+import { findLegalMovesOfPiece, playerHasCapturePossibility, findAllLegalMoves } from '@/helpers/move'
 import { computed, ref, watch, nextTick } from 'vue'
 import PossibleMoveMarker from './PossibleMoveMarker.vue'
 import { useGameStore } from '@/stores/gameStore'
@@ -48,6 +48,9 @@ const gameStore = useGameStore()
 const { currentPlayer, humanPlayerColor } = storeToRefs(gameStore)
 const animationStore = useAnimationStore()
 const { animatingMove, isAnimating } = storeToRefs(animationStore)
+
+const flashRedIndices = ref<Set<number>>(new Set())
+let flashRedTimeout: ReturnType<typeof setTimeout> | null = null
 
 const movingPiecePhase = ref<'from' | 'to'>('from')
 const movingPieceContent = ref<SquareContent | null>(null)
@@ -131,6 +134,16 @@ const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
     }
     if (props.context === 'game') {
       if (!possibleMovesForDraggedPieceMap.value[toIndex]) {
+        if (
+          Object.keys(possibleMovesForDraggedPieceMap.value).length === 0 &&
+          humanPlayerColor.value !== null &&
+          currentPlayer.value === humanPlayerColor.value
+        ) {
+          if (flashRedTimeout) clearTimeout(flashRedTimeout)
+          const color = getPieceColor(board.value[fromIndex])!
+          flashRedIndices.value = new Set(findAllLegalMoves(board.value, color).map(m => m.fromIndex))
+          flashRedTimeout = setTimeout(() => { flashRedIndices.value = new Set() }, 600)
+        }
         return
       }
       boardStore.applyMove(possibleMovesForDraggedPieceMap.value[toIndex])
@@ -173,6 +186,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
           v-if="!isWhiteSquare(rowIndex, colIndex) && !(animatingMove && getDisplaySquareIndex(rowIndex, colIndex) === animatingMove.fromIndex)"
           :piece="board[getDisplaySquareIndex(rowIndex, colIndex)]!"
           :index="getDisplaySquareIndex(rowIndex, colIndex)"
+          :flash-red="flashRedIndices.has(getDisplaySquareIndex(rowIndex, colIndex))"
           context="board"
         />
         <PossibleMoveMarker v-if="shouldShowPossibleMoveMarker(rowIndex, colIndex)" :key="getDisplaySquareIndex(rowIndex, colIndex)" />

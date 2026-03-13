@@ -20,8 +20,6 @@ const gameStore = useGameStore()
 const { humanPlayerColor } = storeToRefs(gameStore)
 const dropStore = useDragStore()
 
-// TODO: podświetlić figurę jeśli jest bicie, a user kliknął taką która nie ma bicia
-
 function flipBoard() {
     isBoardFlipped.value = !isBoardFlipped.value
 }
