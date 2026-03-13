@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { useGameStore } from '@/stores/gameStore'
-import BoardComponent from './BoardComponent.vue'
-import GameInfo from './GameInfo.vue'
-import PieceGraveryard from './PieceGraveryard.vue'
+import Board from './Board.vue'
+import GameInfo from '@/components/game/GameInfo.vue'
+import CapturedPieces from '@/components/piece/CapturedPieces.vue'
 import { ref, watch } from 'vue'
 import { useDragStore } from '@/stores/dragStore'
-import ButtonComponent from './ButtonComponent.vue'
-import ButtonContainer from './ButtonContainer.vue'
+import Button from '@/components/ui/Button.vue'
+import ButtonGroup from '@/components/ui/ButtonGroup.vue'
 import { storeToRefs } from 'pinia'
 import type { BoardContext } from '@/types'
 
@@ -38,28 +38,28 @@ function resetGame() {
 <template>
     <GameInfo />
 
-    <PieceGraveryard class="graveyard-top" :pieceColor="isBoardFlipped ? 'black' : 'white'" />
+    <CapturedPieces class="graveyard-top" :pieceColor="isBoardFlipped ? 'black' : 'white'" />
 
-    <BoardComponent :is-board-flipped="isBoardFlipped" :context="context" />
+    <Board :is-board-flipped="isBoardFlipped" :context="context" />
 
-    <PieceGraveryard :pieceColor="isBoardFlipped ? 'white' : 'black'" />
+    <CapturedPieces :pieceColor="isBoardFlipped ? 'white' : 'black'" />
 
-    <ButtonContainer
+    <ButtonGroup
         type="game"
     >
-        <ButtonComponent
+        <Button
         buttonType="game"
         @click="resetGame"
         >
         restart
-        </ButtonComponent>
-        <ButtonComponent
+        </Button>
+        <Button
         buttonType="game"
         @click="flipBoard"
         >
         flip board
-        </ButtonComponent>     
-    </ButtonContainer>
+        </Button>
+    </ButtonGroup>
 </template>
 
 <style lang="scss" scoped>

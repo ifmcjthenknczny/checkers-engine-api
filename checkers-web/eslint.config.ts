@@ -29,15 +29,9 @@ export default defineConfigWithVueTs(
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
 
   {
-    files: ['**/pages/**', '**/layouts/**'],
-    rules: {
-      'vue/multi-word-component-names': 'off',
-    },
-  },
-
-  {
     files: ['**/*.{vue,ts,mts,tsx}'],
     rules: {
+      'vue/multi-word-component-names': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['warn'],
     },

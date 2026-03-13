@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import EngineEvaluation from './EngineEvaluation.vue'
+import EngineEval from './EngineEval.vue'
 import MoveInput from './MoveInput.vue'
 </script>
 
 <template>
   <div class="eval-block">
     <MoveInput />
-    <EngineEvaluation />
+    <EngineEval />
   </div>
 </template>
 

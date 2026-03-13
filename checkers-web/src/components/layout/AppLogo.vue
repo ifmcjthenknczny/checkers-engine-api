@@ -30,4 +30,3 @@
         </div>
     </NuxtLink>
 </template>
-

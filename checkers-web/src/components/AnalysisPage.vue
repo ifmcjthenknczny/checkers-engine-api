@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Board from '@/components/BoardComponent.vue'
-import EvaluationContainer from '@/components/EvaluationContainer.vue'
-import PieceToolbox from '@/components/PieceToolbox.vue'
+import Board from '@/components/board/Board.vue'
+import EvaluationPanel from '@/components/analysis/EvaluationPanel.vue'
+import PieceToolbox from '@/components/piece/PieceToolbox.vue'
 </script>
 
 <template>
@@ -11,7 +11,7 @@ import PieceToolbox from '@/components/PieceToolbox.vue'
     </div>
     <aside class="analysis-page__side">
       <div class="analysis-page__analysis-col">
-        <EvaluationContainer />
+        <EvaluationPanel />
       </div>
       <div class="analysis-page__toolbox-col">
         <PieceToolbox />

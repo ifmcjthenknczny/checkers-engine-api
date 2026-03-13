@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import BoardWrapper from '@/components/BoardWrapper.vue'
-import PlayerColorChoice from '@/components/PlayerColorChoice.vue'
+import GameBoardLayout from '@/components/board/GameBoardLayout.vue'
+import PlayerColorChoice from '@/components/game/PlayerColorChoice.vue'
 import { onMounted, watch } from 'vue'
 import { useBoardStore } from '@/stores/boardStore'
 import { useGameStore } from '@/stores/gameStore'
@@ -101,7 +101,7 @@ watch(
   <div class="play-page">
     <div class="play-page__board-col">
       <PlayerColorChoice v-if="gamePhase === 'color'" />
-      <BoardWrapper v-if="['game', 'gameOver'].includes(gamePhase)" context="game" />
+      <GameBoardLayout v-if="['game', 'gameOver'].includes(gamePhase)" context="game" />
     </div>
   </div>
 </template>

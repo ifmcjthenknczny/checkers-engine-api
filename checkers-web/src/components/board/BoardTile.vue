@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO: rename this component, it is not a wrapper
 import { computed, provide } from 'vue'
 
 interface Props {
