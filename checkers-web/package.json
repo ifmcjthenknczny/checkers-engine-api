@@ -1,6 +1,6 @@
 {
   "name": "checkers-web",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "license": "CC-BY-NC-4.0",
@@ -49,7 +49,7 @@
     "vue-tsc": "^3.2.4"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=24.14.0"
   },
   "packageManager": "yarn@4.13.0"
 }
