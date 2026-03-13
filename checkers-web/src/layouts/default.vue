@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import LogoSection from '@/components/LogoSection.vue'
-import NavSection from '@/components/NavSection.vue'
+import AppLogo from '@/components/layout/AppLogo.vue'
+import MainNav from '@/components/layout/MainNav.vue'
 </script>
 
 <template>
   <div class="page-layout">
     <header class="page-layout__header">
-      <LogoSection />
-      <NavSection />
+      <AppLogo />
+      <MainNav />
     </header>
     <main class="page-layout__main">
       <div class="page-layout__content">

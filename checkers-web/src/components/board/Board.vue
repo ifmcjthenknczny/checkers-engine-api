@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { BOARD_SIZE } from '../config'
-import { range, rangeChar } from '../helpers/utils'
+import { BOARD_SIZE } from '@/config'
+import { range, rangeChar } from '@/helpers/utils'
 import { useBoardStore } from '@/stores/boardStore'
-import CheckersPiece from './PieceComponent.vue'
-import CheckersSquare from './BoardSquare.vue'
+import Piece from '@/components/piece/Piece.vue'
+import Square from './Square.vue'
 import { isWhiteSquare, getSquareIndex, getPieceColor, indexToRowCol } from '@/helpers/board'
 import type { BoardContext, Move, SquareContent } from '@/types'
 import { useDragStore } from '@/stores/dragStore'
@@ -113,11 +113,6 @@ const possibleMovesForDraggedPieceMap = computed(() => {
 
 const drop = ([col, row, piece]: [number, number, SquareContent?]) => {
   const toIndex = getDisplaySquareIndex(row, col)
-  // const pieceColor = getPieceColor(piece)
-
-  // if (pieceColor === boardStore.currentPlayer) {
-  //   boardStore.switchPlayer()
-  // }
 
   if (dragContext.value === 'spawn' && props.context === 'analysis') {
     if (!piece) {
@@ -172,7 +167,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
         {{ rowName }}
       </div>
 
-      <CheckersSquare
+      <Square
         v-for="(colName, colIndex) in cols"
         :position="[colIndex, rowIndex]"
         :board-index="getDisplaySquareIndex(rowIndex, colIndex)"
@@ -182,7 +177,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
         @drop-piece="drop"
         :context="context"
       >
-        <CheckersPiece
+        <Piece
           v-if="!isWhiteSquare(rowIndex, colIndex) && !(animatingMove && getDisplaySquareIndex(rowIndex, colIndex) === animatingMove.fromIndex)"
           :piece="board[getDisplaySquareIndex(rowIndex, colIndex)]!"
           :index="getDisplaySquareIndex(rowIndex, colIndex)"
@@ -190,7 +185,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
           context="board"
         />
         <PossibleMoveMarker v-if="shouldShowPossibleMoveMarker(rowIndex, colIndex)" :key="getDisplaySquareIndex(rowIndex, colIndex)" />
-      </CheckersSquare>
+      </Square>
     </template>
 
     <div />
@@ -209,7 +204,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
         class="board__moving-piece"
         :style="movingPieceStyle"
       >
-        <CheckersPiece
+        <Piece
           :piece="movingPieceContent"
           context="board"
         />

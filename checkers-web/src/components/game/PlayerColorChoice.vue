@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useGameStore } from '@/stores/gameStore'
-import ButtonComponent from './ButtonComponent.vue';
-import ButtonContainer from './ButtonContainer.vue';
+import Button from '@/components/ui/Button.vue'
+import ButtonGroup from '@/components/ui/ButtonGroup.vue'
 
 const gameStore = useGameStore()
 
@@ -13,20 +13,20 @@ function chooseColor(color: 'white' | 'black') {
 <template>
 <div class="container">
   <h2 class="question">choose your color</h2>
-  <ButtonContainer type="question">
-    <ButtonComponent
+  <ButtonGroup type="question">
+    <Button
       color-variant="white"
       button-type="color"
       @click="chooseColor('white')">
         white
-    </ButtonComponent>
-    <ButtonComponent
+    </Button>
+    <Button
       color-variant="black"
       button-type="color"
       @click="chooseColor('black')">
         black
-    </ButtonComponent>
-  </ButtonContainer>
+    </Button>
+  </ButtonGroup>
 </div>
 </template>
 
@@ -41,18 +41,6 @@ function chooseColor(color: 'white' | 'black') {
     font-family: $secondaryFont;
     transition: $colorTransitionTime;
     color: color.mix(darkgray, black, 20%);
-
-    // &--hover {
-    //     &-white {
-    //         color: white;
-    //         -webkit-text-stroke: 1.5px black;
-    //     }
-
-    //     &-black {
-    //         color: black;
-    //         -webkit-text-stroke: 1.5px black;
-    //     }
-    // }
   }
 
   @media (max-width: $breakpoint) {

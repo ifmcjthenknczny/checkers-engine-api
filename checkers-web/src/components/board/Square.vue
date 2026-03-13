@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { getPieceColor, getSquareIndex, isWhiteSquare } from '@/helpers/board'
 import type { BoardContext, SquareContent } from '@/types'
-import SquareWrapper from './SquareWrapper.vue'
+import BoardTile from './BoardTile.vue'
 import { useDragStore } from '@/stores/dragStore'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/gameStore'
@@ -70,7 +70,7 @@ const drop = (e: DragEvent) => {
 </script>
 
 <template>
-  <SquareWrapper
+  <BoardTile
     :color="isWhiteSquare(rowIndex, colIndex) ? 'white' : 'black'"
     :key="colName + rowName"
     :id="colName + rowName"
@@ -78,5 +78,5 @@ const drop = (e: DragEvent) => {
     @drop="drop"
   >
     <slot />
-  </SquareWrapper>
+  </BoardTile>
 </template>

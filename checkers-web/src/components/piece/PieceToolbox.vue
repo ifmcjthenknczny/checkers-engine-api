@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { SquareContent } from '@/types'
 import { getPieceColor } from '@/helpers/board'
-import PieceComponent from './PieceComponent.vue'
-import SquareWrapper from './SquareWrapper.vue'
+import Piece from './Piece.vue'
+import BoardTile from '@/components/board/BoardTile.vue'
 import PieceTrash from './PieceTrash.vue'
 import RemovePieces from './RemovePieces.vue'
-import ResetToDefaultButton from './ResetToDefaultButton.vue'
+import ResetBoardButton from '@/components/ui/ResetBoardButton.vue'
 
 const TOOLBOX_PIECES: SquareContent[] = [-3, 3, -1, 1]
 </script>
@@ -14,21 +14,21 @@ const TOOLBOX_PIECES: SquareContent[] = [-3, 3, -1, 1]
   <div class="piece-spawner">
     <div class="piece-spawner__row piece-spawner__row--top">
       <div class="piece-spawner__trash-cell">
-        <SquareWrapper color="black">
+        <BoardTile color="black">
           <PieceTrash />
-        </SquareWrapper>
+        </BoardTile>
       </div>
-      <SquareWrapper color="white">
+      <BoardTile color="white">
         <RemovePieces />
-      </SquareWrapper>
-      <SquareWrapper color="black">
-        <ResetToDefaultButton />
-      </SquareWrapper>
+      </BoardTile>
+      <BoardTile color="black">
+        <ResetBoardButton />
+      </BoardTile>
     </div>
     <div class="piece-spawner__row piece-spawner__row--bottom">
-      <SquareWrapper :key="piece" v-for="piece in TOOLBOX_PIECES" :color="getPieceColor(piece)!">
-        <PieceComponent :piece="piece" context="spawn" />
-      </SquareWrapper>
+      <BoardTile :key="piece" v-for="piece in TOOLBOX_PIECES" :color="getPieceColor(piece)!">
+        <Piece :piece="piece" context="spawn" />
+      </BoardTile>
     </div>
   </div>
 </template>

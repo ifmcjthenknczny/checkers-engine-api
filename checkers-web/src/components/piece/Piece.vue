@@ -39,7 +39,6 @@ const toDecorationClassNameList = (piece?: SquareContent) => {
 }
 
 const canBeDragged = computed(() => {
-  // TODO: Handle properly click on piece when it can be dragged
   if (isAnimating.value) {
     return false
   }
