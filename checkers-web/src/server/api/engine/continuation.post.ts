@@ -1,57 +1,26 @@
 import { z } from 'zod'
-import { loadModel, evaluateBoardRaw } from '#server/utils/model'
+import { evaluateBoardRaw } from '#server/utils/model'
+import { BoardMoveSchema, DEFAULT_MODEL_LEVEL, ensureModelLoaded, parseBodyOrThrow } from '#server/utils/engine'
 import { type ModelLevel, MODEL_LEVELS } from '~/types'
 import { findAllLegalContinuations, applyMove } from '~/helpers/move'
 import type { BoardPosition, Player } from '~/types'
 
-const ALLOWED_PIECES = [0, 1, -1, 3, -3]
-const ALLOWED_PLAYERS_TO_MOVE = [-1, 1]
-
-const BodySchema = z.object({
-  board: z
-    .array(z.number().int())
-    .length(32, 'Array must have exactly 32 elements')
-    .refine((arr) => arr.every((val) => ALLOWED_PIECES.includes(val)), {
-      message: 'Allowed values are: 0 (empty), 1/-1 (pawns), 3/-3 (queens)',
-    }),
-  move: z.number().int().refine((val) => ALLOWED_PLAYERS_TO_MOVE.includes(val), {
-    message: 'Player to move must be 1 (White) or -1 (Black)',
-  }),
+const ContinuationBodySchema = BoardMoveSchema.extend({
   modelLevel: z.number().int().optional(),
 })
 
-const DEFAULT_MODEL_LEVEL: ModelLevel = MODEL_LEVELS.at(-1)!
-
-let modelLevelLoaded: ModelLevel | null = null
-
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const modelsPath = config.modelsPath
-
-  const body = BodySchema.safeParse(await readBody(event))
-
-  if (!body.success) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid input',
-      data: body.error.issues.map((issue) => ({
-        path: issue.path.join('.'),
-        message: issue.message,
-      })),
-    })
-  }
+  const body = await parseBodyOrThrow(event, ContinuationBodySchema)
 
   const modelLevel: ModelLevel =
-    body.data.modelLevel != null && (MODEL_LEVELS as readonly number[]).includes(body.data.modelLevel)
-      ? (body.data.modelLevel as ModelLevel)
+    body.modelLevel != null && (MODEL_LEVELS as readonly number[]).includes(body.modelLevel)
+      ? (body.modelLevel as ModelLevel)
       : DEFAULT_MODEL_LEVEL
 
-  if (modelLevelLoaded !== modelLevel) {
-    await loadModel(modelLevel, modelsPath)
-    modelLevelLoaded = modelLevel
-  }
+  await ensureModelLoaded(modelLevel, config.modelsPath)
 
-  const { board, move } = body.data
+  const { board, move } = body
   const playerColor: Player = move === 1 ? 'white' : 'black'
   const boardPosition = board as BoardPosition
 
