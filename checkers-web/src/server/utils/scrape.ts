@@ -4,7 +4,7 @@ import type { BoardPosition, GameResult, Move, Player, ScrapeModelLevel } from '
 import { STARTING_BOARD_STATE, isQueen } from '~/helpers/board'
 import { applyMove } from '~/helpers/move'
 import { determineGameResult } from '~/helpers/gameOver'
-import { pickBestContinuation, pickRandomContinuation } from '~/helpers/ai'
+import { pickBestEngineContinuation, pickRandomContinuation } from '~/helpers/ai'
 import { loadModel, evaluateBoardRaw } from './model'
 
 type JsonGameResult = -1 | 0 | 1
@@ -17,11 +17,6 @@ export type TurnRecord = {
 }
 
 export type GameData = (TurnRecord & {result: JsonGameResult})[]
-
-// TODO: modelLevel parameter
-async function evaluateBoardServer(board: BoardPosition, playerToMove: Player): Promise<number> {
-  return evaluateBoardRaw(board, playerToMove === 'white' ? 1 : -1)
-}
 
 const MAX_TURNS = 300
 const EVAL_DECIMALS = 6
@@ -78,7 +73,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
     if (!modelLevel || shouldRandomizeMove) {
       moves = pickRandomContinuation(board, currentPlayer)
     } else {
-      moves = await pickBestContinuation(board, currentPlayer, evaluateBoardServer)
+      moves = await pickBestEngineContinuation(board, currentPlayer)
     }
 
     if (moves.length === 0) {
@@ -101,7 +96,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       turns.push({
         board: [...board],
         move: currentPlayer === 'white' ? 1 : -1,
-        ...(modelLevel ? { eval: roundEval(await evaluateBoardServer(board, currentPlayer)) } : {}),
+        ...(modelLevel ? { eval: roundEval(await evaluateBoardRaw(board, currentPlayer === 'white' ? 1 : -1)) } : {}),
       })
     }
   }
