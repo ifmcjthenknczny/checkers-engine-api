@@ -127,17 +127,21 @@ watch(
 </script>
 
 <template>
-  <div class="free-play-page">
-    <div class="free-play-page__board-col">
+  <div class="learn-page">
+    <div class="learn-page__board-col">
       <template v-if="gamePhase === 'color'">
         <Board context="analysis" />
       </template>
       <template v-else>
-        <GameBoardLayout context="game" />
+        <GameBoardLayout context="game" restart-button-label="stop" />
       </template>
     </div>
 
-    <aside class="free-play-page__side">
+    <div v-if="gamePhase === 'color'" class="learn-page__toolbox-col">
+      <PieceToolbox />
+    </div>
+
+    <aside class="learn-page__side">
       <template v-if="gamePhase === 'color'">
         <div class="setup-panel">
           <div class="setup-panel__section">
@@ -150,7 +154,8 @@ watch(
               <Button
                 color-variant="white"
                 button-type="color"
-                :class="{ 'button--selected': selectedPlayerColor === 'white' }"
+                size-variant="small"
+                :selected="selectedPlayerColor === 'white'"
                 @click="selectedPlayerColor = 'white'"
               >
                 white
@@ -158,7 +163,8 @@ watch(
               <Button
                 color-variant="black"
                 button-type="color"
-                :class="{ 'button--selected': selectedPlayerColor === 'black' }"
+                size-variant="small"
+                :selected="selectedPlayerColor === 'black'"
                 @click="selectedPlayerColor = 'black'"
               >
                 black
@@ -167,22 +173,19 @@ watch(
           </div>
           <Button button-type="game" @click="startGame">start</Button>
         </div>
-        <div class="free-play-page__toolbox-col">
-          <PieceToolbox />
-        </div>
       </template>
 
       <template v-else>
-        <div class="free-play-page__eval-col">
+        <div class="learn-page__eval-col">
           <EngineEval />
           <div
-            v-if="gamePhase === 'game' && humanPlayerColor === currentPlayer"
+            v-if="gamePhase === 'game'"
             class="best-move-hint"
-            :class="{ 'best-move-hint--loading': isBestMoveLoading }"
+            :class="{ 'best-move-hint--loading': humanPlayerColor === currentPlayer && isBestMoveLoading }"
           >
             <span class="best-move-hint__label">hint</span>
             <span class="best-move-hint__move">
-              {{ formattedBestMove ?? '...' }}
+              {{ humanPlayerColor === currentPlayer ? (formattedBestMove ?? '...') : '...' }}
             </span>
           </div>
         </div>
@@ -192,41 +195,54 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-.free-play-page {
+.learn-page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: inherit;
+  gap: 0.75rem;
   width: 100%;
   box-sizing: border-box;
 }
 
-.free-play-page__board-col {
-  display: flex;
-  flex-shrink: 0;
-  justify-content: center;
-}
-
-.free-play-page__side {
+.learn-page__board-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  justify-content: center;
+  order: 1;
+}
+
+.learn-page__toolbox-col {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  order: 2;
+}
+
+.learn-page__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   width: 100%;
+  order: 3;
 }
 
 .setup-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.75rem;
   width: 100%;
 
   &__section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     width: 100%;
   }
 
@@ -240,7 +256,7 @@ watch(
   }
 }
 
-.free-play-page__eval-col {
+.learn-page__eval-col {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -252,9 +268,12 @@ watch(
 .best-move-hint {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 0.3rem;
   transition: opacity 0.2s;
+  width: 12ch;
+  max-width: 100%;
+  flex-shrink: 0;
 
   &--loading {
     opacity: 0.5;
@@ -278,36 +297,59 @@ watch(
     border-radius: 4px;
     border: 1px solid #ddd;
     letter-spacing: 0.04em;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    text-align: center;
+    overflow-wrap: break-word;
+    word-break: break-all;
   }
 }
 
-.button--selected {
-  outline: 3px solid $clickedColor;
-  outline-offset: 2px;
+@media (max-width: $breakpoint) {
+  .learn-page__board-col {
+    :deep(.game-info) {
+      width: $boardSizeVertical;
+      font-size: 1.4rem;
+    }
+
+    :deep(.game-info__who-to-move) {
+      margin-left: $nameSquareSizeVertical;
+    }
+  }
 }
 
 @media (min-width: $breakpoint) {
-  .free-play-page {
+  .learn-page {
     flex: 1;
     flex-direction: row;
     align-items: flex-start;
+    gap: inherit;
   }
 
-  .free-play-page__board-col {
+  .learn-page__board-col {
     flex: 1;
     justify-content: center;
     min-width: 0;
+    order: 1;
   }
 
-  .free-play-page__side {
+  .learn-page__side {
     flex-shrink: 0;
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
     gap: 1.5rem;
     width: auto;
+    order: 2;
   }
 
-  .free-play-page__eval-col {
+  .learn-page__toolbox-col {
+    align-items: flex-start;
+    order: 3;
+    margin-left: 2rem;
+  }
+
+  .learn-page__eval-col {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -319,13 +361,6 @@ watch(
     &__section {
       align-items: flex-start;
     }
-  }
-
-  .free-play-page__toolbox-col {
-    display: flex;
-    flex-shrink: 0;
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 </style>

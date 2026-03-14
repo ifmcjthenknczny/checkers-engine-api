@@ -1,7 +1,7 @@
 <script setup lang="ts">
-useHead({ title: 'WARCABY - Free Play' })
+useHead({ title: 'WARCABY - Learn' })
 </script>
 
 <template>
-  <FreePlay />
+  <Learn />
 </template>

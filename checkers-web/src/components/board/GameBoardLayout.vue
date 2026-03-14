@@ -10,9 +10,13 @@ import ButtonGroup from '@/components/ui/ButtonGroup.vue'
 import { storeToRefs } from 'pinia'
 import type { BoardContext } from '@/types'
 
-defineProps<{
-  context: BoardContext
-}>()
+withDefaults(
+  defineProps<{
+    context: BoardContext
+    restartButtonLabel?: string
+  }>(),
+  { restartButtonLabel: 'restart' }
+)
 
 const isBoardFlipped = ref<boolean>(false)
 
@@ -51,7 +55,7 @@ function resetGame() {
         buttonType="game"
         @click="resetGame"
         >
-        restart
+        {{ restartButtonLabel }}
         </Button>
         <Button
         buttonType="game"

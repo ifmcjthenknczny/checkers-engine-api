@@ -2,6 +2,8 @@
 defineProps<{
   colorVariant?: 'white' | 'black'
   buttonType?: 'color' | 'game'
+  sizeVariant?: 'small'
+  selected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -16,6 +18,8 @@ const emit = defineEmits<{
       'button',
       colorVariant && `button--${colorVariant}`,
       buttonType && `button--${buttonType}`,
+      sizeVariant && `button--${sizeVariant}`,
+      selected && 'button--selected',
     ].filter(Boolean)"
     @click="emit('click')"
   >
@@ -52,26 +56,50 @@ const emit = defineEmits<{
 
   &--color {
     font-size: 1.6rem;
-    margin-top: 60px;
     width: 200px;
     height: 75px;
+
+    &.button--small {
+      font-size: 1.35rem;
+      width: 135px;
+      height: 52px;
+    }
   }
 
-  &--white:hover,
-  &--white:active {
-    background-color: white;
-    font-weight: 900;
-    box-shadow: 0 0 40px 9px #808080;
-    font-size: 1.8rem;
+  &--white {
+    &:hover,
+    &:active {
+      background-color: white;
+      font-weight: 900;
+      box-shadow: 0 0 40px 9px #808080;
+      font-size: 1.8rem;
+    }
+
+    &.button--selected {
+      background-color: white;
+      font-weight: 900;
+      font-size: 1.8rem;
+      box-shadow: 0 0 28px 6px #808080;
+    }
   }
 
-  &--black:hover,
-  &--black:active {
-    background-color: black;
-    font-weight: 900;
-    color: white;
-    box-shadow: 0 0 40px 9px #606060;
-    font-size: 1.8rem;
+  &--black {
+    &:hover,
+    &:active {
+      background-color: black;
+      font-weight: 900;
+      color: white;
+      box-shadow: 0 0 40px 9px #606060;
+      font-size: 1.8rem;
+    }
+
+    &.button--selected {
+      background-color: black;
+      font-weight: 900;
+      font-size: 1.8rem;
+      color: white;
+      box-shadow: 0 0 28px 6px #606060;
+    }
   }
 }
 
@@ -80,12 +108,22 @@ const emit = defineEmits<{
     &--color {
       width: 30vw;
       height: 45px;
+
+      &.button--small {
+        width: 42vw;
+        height: 46px;
+        font-size: 1rem;
+      }
     }
 
     &--white {
       background-color: white;
       font-weight: 900;
       font-size: 1.8rem;
+
+      &.button--small {
+        font-size: 1rem;
+      }
     }
 
     &--black {
@@ -93,6 +131,10 @@ const emit = defineEmits<{
       font-weight: 900;
       color: white;
       font-size: 1.8rem;
+
+      &.button--small {
+        font-size: 1rem;
+      }
     }
 
     &--game {

@@ -185,7 +185,7 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
           v-if="!isWhiteSquare(rowIndex, colIndex) && !(animatingMove && getDisplaySquareIndex(rowIndex, colIndex) === animatingMove.fromIndex)"
           :piece="board[getDisplaySquareIndex(rowIndex, colIndex)]!"
           :index="getDisplaySquareIndex(rowIndex, colIndex)"
-          :flash-red="flashRedIndices.has(getDisplaySquareIndex(rowIndex, colIndex))"
+          :flash-red="flashRedIndices.has(getDisplaySquareIndex(rowIndex, colIndex)) && humanPlayerColor !== null && getPieceColor(board[getDisplaySquareIndex(rowIndex, colIndex)]) === humanPlayerColor"
           context="board"
         />
         <PossibleMoveMarker v-if="shouldShowPossibleMoveMarker(rowIndex, colIndex)" :key="getDisplaySquareIndex(rowIndex, colIndex)" />

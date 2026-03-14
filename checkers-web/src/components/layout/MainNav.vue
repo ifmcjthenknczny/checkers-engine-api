@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const navItems = [
   { name: 'play', path: '/play', label: 'Play' },
-  { name: 'free-play', path: '/free-play', label: 'Free Play' },
+  { name: 'learn', path: '/learn', label: 'Learn' },
   { name: 'analysis', path: '/analysis', label: 'Analyse' },
 ] as const
 </script>

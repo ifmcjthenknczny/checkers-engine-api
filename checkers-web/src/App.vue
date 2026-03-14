@@ -19,7 +19,7 @@ body {
   flex-flow: column;
   background-image: url('../public/what-the-hex.png');
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 main {
