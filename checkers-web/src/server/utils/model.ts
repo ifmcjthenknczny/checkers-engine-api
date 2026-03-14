@@ -58,8 +58,7 @@ export async function minimaxScore(
   const continuations = findAllLegalContinuations(board, currentPlayer)
 
   if (continuations.length === 0) {
-    const rawNoMoves = currentPlayer === 'white' ? -1 : 1
-    return rootPlayer === 'white' ? rawNoMoves : -rawNoMoves
+    return currentPlayer === rootPlayer ? -1 : 1
   }
 
   const opponent: Player = currentPlayer === 'white' ? 'black' : 'white'

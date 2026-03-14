@@ -125,14 +125,10 @@ export async function playGames(count: number, modelLevel: ScrapeModelLevel, ran
 
   let gamesWritten = 0
   const startTime = Date.now()
+  let lastLoggedPct = -1
 
   try {
     for (let i = 0; i < count; i++) {
-      const elapsedMs = Date.now() - startTime
-      const avgPerGame =
-        gamesWritten > 0 ? ` (avg. ${(elapsedMs / gamesWritten / 1000).toFixed(4)} s/game)` : ''
-      console.log(`[scrape] Playing game ${i + 1}/${count}${avgPerGame}...`)
-
       try {
         const gameData = await playGame(modelLevel, randomCoefficient, depth)
         const prefix = gamesWritten > 0 ? ',' : ''
@@ -140,6 +136,17 @@ export async function playGames(count: number, modelLevel: ScrapeModelLevel, ran
         gamesWritten++
       } catch (error) {
         console.error(`[scrape] Game ${i + 1} failed:`, error)
+      }
+
+      const pct = Math.floor(((i + 1) / count) * 100)
+      if (pct > lastLoggedPct) {
+        lastLoggedPct = pct
+        const elapsedMs = Date.now() - startTime
+        const avgPerGame =
+          gamesWritten > 0 ? (elapsedMs / gamesWritten / 1000).toFixed(4) : '—'
+        console.log(
+          `[scrape] ${pct}% — ${i + 1}/${count} games, ${gamesWritten} written, avg. ${avgPerGame} s/game`,
+        )
       }
     }
   } finally {
