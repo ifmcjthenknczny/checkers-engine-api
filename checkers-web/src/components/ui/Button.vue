@@ -27,6 +27,7 @@ const emit = defineEmits<{
   </button>
 </template>
 <style lang="scss" scoped>
+// TODO: Use mobile first approach
 @use 'sass:color';
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,550;0,650;0,700;0,900;1,400&display=swap');
 
