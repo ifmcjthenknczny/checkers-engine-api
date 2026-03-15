@@ -16,7 +16,10 @@ OUTPUT_FILE_PATH = f"{MODELS_DIR}/engine_3.onnx"
 MAX_EPOCHS = 200
 BATCH_SIZE = 4096
 LEARNING_RATE = 0.002
+
 EARLY_STOPPING_PATIENCE = 15
+MIN_DELTA = 1e-4
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -56,8 +59,6 @@ class CheckersNet(nn.Module):
             nn.Linear(64, 1),
             nn.Tanh(),
         )
-
-        self.w = nn.Parameter(torch.randn(2))
 
     def forward(self, x):
         return self.network(x)
@@ -102,8 +103,7 @@ def train():
             batch_x = batch_x.to(DEVICE)
             batch_eval = batch_eval.to(DEVICE)
             batch_result = batch_result.to(DEVICE)
-            weights = torch.softmax(model.w, dim=0)
-            batch_y = weights[0] * batch_eval + weights[1] * batch_result
+            batch_y = 0.3 * batch_eval + 0.7 * batch_result
 
             optimizer.zero_grad()
             outputs = model(batch_x)
@@ -121,8 +121,7 @@ def train():
                 v_x = v_x.to(DEVICE)
                 v_eval = v_eval.to(DEVICE)
                 v_result = v_result.to(DEVICE)
-                v_weights = torch.softmax(model.w, dim=0)
-                v_y = v_weights[0] * v_eval + v_weights[1] * v_result
+                v_y = 0.3 * v_eval + 0.7 * v_result
 
                 v_out = model(v_x)
                 v_loss = criterion(v_out, v_y)
@@ -137,7 +136,7 @@ def train():
             f"Epoch [{epoch+1}/{MAX_EPOCHS}] Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}"
         )
 
-        if avg_val_loss < best_val_loss:
+        if avg_val_loss < best_val_loss - MIN_DELTA:
             best_val_loss = avg_val_loss
             patience_counter = 0
             torch.save(model.state_dict(), "best_model.pth")
@@ -149,8 +148,6 @@ def train():
 
     model.load_state_dict(torch.load("best_model.pth", map_location=DEVICE))
     model.eval()
-    weights = torch.softmax(model.w, dim=0)
-    print(f"Eval/result weights: {weights[0].item():.3f} : {weights[1].item():.3f}")
     print("Exporting to ONNX...")
     dummy_input = torch.randn(1, 33).to(DEVICE)
     torch.onnx.export(model, dummy_input, OUTPUT_FILE_PATH)

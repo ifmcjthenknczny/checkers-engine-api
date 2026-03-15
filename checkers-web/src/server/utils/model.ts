@@ -27,7 +27,7 @@ function toPlayerToMove(player: Player): PlayerToMove {
   return player === 'white' ? 1 : -1
 }
 
-export async function evaluateBoardRaw(board: BoardPosition, move: Player): Promise<number> {
+export async function evaluateBoardShallow(board: BoardPosition, move: Player): Promise<number> {
   try {
     if (!session) {
       throw new Error('ONNX Session not initialized')
@@ -45,13 +45,13 @@ export async function evaluateBoardRaw(board: BoardPosition, move: Player): Prom
   }
 }
 
-export async function minimaxScore(
+export async function evaluateBoardDeeply(
   board: BoardPosition,
   currentPlayer: Player,
   depth: number,
 ): Promise<number> {
   if (depth === 0) {
-    return evaluateBoardRaw(board, currentPlayer)
+    return evaluateBoardShallow(board, currentPlayer)
   }
 
   const continuations = findAllLegalContinuations(board, currentPlayer)
@@ -68,7 +68,7 @@ export async function minimaxScore(
         (boardPosition, move) => applyMove(boardPosition, move).boardAfter,
         [...board] as BoardPosition,
       )
-      return minimaxScore(resultBoard, opponent, depth - 1)
+      return evaluateBoardDeeply(resultBoard, opponent, depth - 1)
     }),
   )
 
@@ -97,9 +97,9 @@ export async function pickBestContinuationWithDepth(
         [...board] as BoardPosition,
       )
       if (clampedDepth === 0) {
-        return evaluateBoardRaw(resultBoard, player)
+        return evaluateBoardShallow(resultBoard, player)
       }
-      return minimaxScore(resultBoard, opponent, clampedDepth - 1)
+      return evaluateBoardDeeply(resultBoard, opponent, clampedDepth - 1)
     }),
   )
 

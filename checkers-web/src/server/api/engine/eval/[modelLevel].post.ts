@@ -1,4 +1,4 @@
-import { evaluateBoardRaw, minimaxScore, ensureModelLoaded, parseModelLevel } from '#server/utils/model'
+import { evaluateBoardDeeply, ensureModelLoaded, parseModelLevel } from '#server/utils/model'
 import { BodyRequestSchema, parseBodyOrThrow } from '#server/utils/schema'
 import type { BoardPosition } from '~/types'
 
@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
   const { board, move, depth } = await parseBodyOrThrow(event, BodyRequestSchema)
   const boardPosition = board as BoardPosition
 
-  const evaluation = depth === 0
-    ? await evaluateBoardRaw(boardPosition, move)
-    : await minimaxScore(boardPosition, move, depth)
+  const evaluation = await evaluateBoardDeeply(boardPosition, move, depth)
 
   return { evaluation, status: 'success' }
 })
