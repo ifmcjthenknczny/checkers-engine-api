@@ -11,6 +11,7 @@ export const BodyRequestSchema = z.object({
       message: 'Allowed values are: 0 (empty), 1/-1 (pawns), 3/-3 (queens)',
     }),
   move: z.enum(COLORS),
+  depth: z.coerce.number().int().min(0).max(MAX_DEPTH).default(DEFAULT_DEPTH),
 })
 
 export async function parseBodyOrThrow<T>(event: H3Event, schema: z.ZodSchema<T>): Promise<T> {

@@ -1,3 +1,4 @@
+import { DEFAULT_DEPTH } from '~/server/utils/model'
 import { MODEL_LEVELS, type BoardPosition, type ModelLevel, type Move, type Player } from '../types'
 import { findAllLegalContinuations } from './move'
 import { chooseRandomly } from './utils'
@@ -20,6 +21,7 @@ export async function pickBestEngineContinuation(
   board: BoardPosition,
   player: Player,
   modelLevel: ModelLevel = DEFAULT_MODEL_LEVEL,
+  depth: number = DEFAULT_DEPTH,
 ): Promise<Move[]> {
   const baseUrl =
     useRuntimeConfig().public.engineApiUrl ??
@@ -31,7 +33,7 @@ export async function pickBestEngineContinuation(
 
   const data = await $fetch<ContinuationResponse>(url, {
     method: 'POST',
-    body: { board, move: player },
+    body: { board, move: player, depth },
   })
   return data.continuation ?? []
 }

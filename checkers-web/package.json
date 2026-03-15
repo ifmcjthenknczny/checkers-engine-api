@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
+    "buildAndStart": "nuxt build && nuxt preview",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test:unit": "vitest",

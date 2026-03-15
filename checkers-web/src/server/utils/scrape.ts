@@ -4,8 +4,8 @@ import type { BoardPosition, GameResult, Move, Player, ScrapeModelLevel } from '
 import { STARTING_BOARD_STATE, isQueen } from '~/helpers/board'
 import { applyMove } from '~/helpers/move'
 import { determineGameResult } from '~/helpers/gameOver'
-import { pickBestEngineContinuation, pickRandomContinuation } from '~/helpers/ai'
-import { loadModel, evaluateBoardRaw } from './model'
+import { pickRandomContinuation } from '~/helpers/ai'
+import { ensureModelLoaded, evaluateBoardDeeply, pickBestContinuationWithDepth } from './model'
 
 type JsonGameResult = -1 | 0 | 1
 type JsonPlayerMove = 1 | -1
@@ -43,16 +43,28 @@ function shouldSaveMove(moveNumber: number): boolean {
   const turn = Math.floor(moveNumber / 2);
   const min = 0.1;
   const max = 1;
-  const midpoint = 12;
+  const midpoint = 10;
   const steepness = 0.3;
   const sigmoid = 1 / (1 + Math.exp(-steepness * (turn - midpoint)));
   return min + (max - min) * sigmoid > Math.random();
 }
 
-export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<GameData> {
+const shouldRandomizeMove = (randomCoefficient: number, moveNumber: number): boolean => {
+  const turnFlatpoint = 6;
+  const turn = Math.floor(moveNumber / 2);
+  if (turn > turnFlatpoint) {
+    return randomCoefficient > Math.random();
+  }
+  const slope = (1 - randomCoefficient) / turnFlatpoint;
+  const probability = 1 - slope * turn;
+
+  return probability > Math.random();
+};
+
+export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: number, depth: number = 0): Promise<GameData> {
   const config = useRuntimeConfig()
   if (modelLevel) {
-    await loadModel(modelLevel, config.modelsPath)
+    await ensureModelLoaded(modelLevel, config.modelsPath)
   } else {
     randomCoefficient = 1
   }
@@ -68,19 +80,14 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       return mapGameDataToJson(turns, gameResult)
     }
 
-    let moves: Move[]
-    const shouldRandomizeMove = Math.random() < randomCoefficient
-    if (!modelLevel || shouldRandomizeMove) {
-      moves = pickRandomContinuation(board, currentPlayer)
-    } else {
-      moves = await pickBestEngineContinuation(board, currentPlayer)
+    const continuation: { moves: Move[], score?: number } = (!modelLevel || shouldRandomizeMove(randomCoefficient, moveNumber)) ? { moves: pickRandomContinuation(board, currentPlayer) } : await pickBestContinuationWithDepth(board, currentPlayer, depth)
+
+    if (continuation.moves.length === 0) {
+      const winner = currentPlayer === 'white' ? 'black' : 'white'
+      return mapGameDataToJson(turns, winner)
     }
 
-    if (moves.length === 0) {
-      return mapGameDataToJson(turns, currentPlayer === 'white' ? 'black' : 'white')
-    }
-
-    for (const move of moves) {
+    for (const move of continuation.moves) {
       board = applyMove(board, move).boardAfter
       if (!move.isCapture && isQueen(board[move.toIndex])) {
         queenMovesWithoutCaptureStreak++
@@ -96,14 +103,33 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       turns.push({
         board: [...board],
         move: currentPlayer === 'white' ? 1 : -1,
-        ...(modelLevel ? { eval: roundEval(await evaluateBoardRaw(board, currentPlayer)) } : {}),
+        ...(modelLevel ? { eval: roundEval(continuation.score ?? await evaluateBoardDeeply(board, currentPlayer, depth)) } : {}),
       })
     }
   }
   return mapGameDataToJson(turns, 'draw')
 }
 
-export async function playGames(count: number, modelLevel: ScrapeModelLevel, randomCoefficient: number): Promise<string> {
+const LOG_EVERY_GAMES = 100
+
+function logProgress(gameIndex: number, count: number, gamesWritten: number, startTime: number): void {
+  const completed = gameIndex + 1
+  if (completed === 1 || completed % LOG_EVERY_GAMES === 0 || completed === count) {
+    const elapsedMs = Date.now() - startTime
+    const avgPerGame =
+      gamesWritten > 0 ? (elapsedMs / gamesWritten / 1000).toFixed(4) : '—'
+    console.log(
+      `[scrape] ${completed}/${count} games, ${gamesWritten} written, avg. ${avgPerGame} s/game`,
+    )
+  }
+}
+
+export async function playGames(
+  count: number,
+  modelLevel: ScrapeModelLevel,
+  randomCoefficient: number,
+  depth: number,
+): Promise<string> {
   const dataDir = join(process.cwd(), '../data')
   mkdirSync(dataDir, { recursive: true })
 
@@ -117,19 +143,16 @@ export async function playGames(count: number, modelLevel: ScrapeModelLevel, ran
 
   try {
     for (let i = 0; i < count; i++) {
-      const elapsedMs = Date.now() - startTime
-      const avgPerGame =
-        gamesWritten > 0 ? ` (avg. ${(elapsedMs / gamesWritten / 1000).toFixed(4)} s/game)` : ''
-      console.log(`[scrape] Playing game ${i + 1}/${count}${avgPerGame}...`)
-
       try {
-        const gameData = await playGame(modelLevel, randomCoefficient)
+        const gameData = await playGame(modelLevel, randomCoefficient, depth)
         const prefix = gamesWritten > 0 ? ',' : ''
         appendFileSync(outputFile, `${prefix}${JSON.stringify(gameData).slice(1, -1)}`, 'utf8')
         gamesWritten++
       } catch (error) {
         console.error(`[scrape] Game ${i + 1} failed:`, error)
       }
+
+      logProgress(i, count, gamesWritten, startTime)
     }
   } finally {
     appendFileSync(outputFile, ']', 'utf8')
