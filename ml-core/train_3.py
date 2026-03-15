@@ -10,13 +10,13 @@ KAGGLE_NICKNAME = os.environ.get("KAGGLE_NICKNAME", "KAGGLE_NICKNAME")
 DATA_DIR = f"/kaggle/input/datasets/{KAGGLE_NICKNAME}/games-1"
 MODELS_DIR = "/kaggle/working"
 
-INPUT_FILE_PATH = f"{DATA_DIR}/games_2026-03-07T00-11-46-433Z.json"
+INPUT_FILE_PATH = f"{DATA_DIR}/games_2026-03-14T21-36-45-156Z.json"
 OUTPUT_FILE_PATH = f"{MODELS_DIR}/engine_3.onnx"
 
 MAX_EPOCHS = 200
 BATCH_SIZE = 4096
 LEARNING_RATE = 0.002
-EARLY_STOPPING_PATIENCE = 20
+EARLY_STOPPING_PATIENCE = 15
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -40,10 +40,13 @@ class CheckersNet(nn.Module):
     def __init__(self):
         super(CheckersNet, self).__init__()
         self.network = nn.Sequential(
-            nn.Linear(33, 256),
-            nn.BatchNorm1d(256),
+            nn.Linear(33, 512),
+            nn.BatchNorm1d(512),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.1),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.LeakyReLU(0.1),
             nn.Linear(256, 128),
             nn.BatchNorm1d(128),
             nn.LeakyReLU(0.1),

@@ -6,7 +6,8 @@ import { findAllLegalContinuations, applyMove } from '~/helpers/move'
 
 type PlayerToMove = -1 | 1
 
-export const MAX_DEPTH = 5
+export const DEFAULT_DEPTH = 6
+export const MAX_DEPTH = 20
 
 let session: ort.InferenceSession | null = null
 
@@ -64,7 +65,7 @@ export async function minimaxScore(
   const scores = await Promise.all(
     continuations.map((moves) => {
       const resultBoard = moves.reduce(
-        (b, m) => applyMove(b, m).boardAfter,
+        (boardPosition, move) => applyMove(boardPosition, move).boardAfter,
         [...board] as BoardPosition,
       )
       return minimaxScore(resultBoard, opponent, depth - 1)
@@ -77,7 +78,7 @@ export async function minimaxScore(
 export async function pickBestContinuationWithDepth(
   board: BoardPosition,
   player: Player,
-  depth: number = 0
+  depth: number
 ): Promise<Move[]> {
   const continuations = findAllLegalContinuations(board, player)
 
@@ -95,7 +96,7 @@ export async function pickBestContinuationWithDepth(
   const scores = await Promise.all(
     continuations.map((moves) => {
       const resultBoard = moves.reduce(
-        (b, m) => applyMove(b, m).boardAfter,
+        (boardPosition, move) => applyMove(boardPosition, move).boardAfter,
         [...board] as BoardPosition,
       )
       if (clampedDepth <= 1) {
@@ -105,11 +106,11 @@ export async function pickBestContinuationWithDepth(
     }),
   )
 
-  const bestIndex = scores.reduce((bestIdx, score, i) => {
+  const bestIndex = scores.reduce((bestIdx, score, index) => {
     if (isMaximizing) {
-      return score > scores[bestIdx] ? i : bestIdx
+      return score > scores[bestIdx] ? index : bestIdx
     }
-    return score < scores[bestIdx] ? i : bestIdx
+    return score < scores[bestIdx] ? index : bestIdx
   }, 0)
 
   return continuations[bestIndex] ?? []

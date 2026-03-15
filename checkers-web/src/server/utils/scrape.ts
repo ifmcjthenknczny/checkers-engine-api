@@ -114,7 +114,27 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
   return mapGameDataToJson(turns, 'draw')
 }
 
-export async function playGames(count: number, modelLevel: ScrapeModelLevel, randomCoefficient: number, depth: number = 0): Promise<string> {
+function logProgress(
+  gameIndex: number,
+  count: number,
+  gamesWritten: number,
+  startTime: number,
+  lastLoggedPct: number,
+): number {
+  const pct = Math.floor(((gameIndex + 1) / count) * 100)
+  if (pct > lastLoggedPct) {
+    const elapsedMs = Date.now() - startTime
+    const avgPerGame =
+      gamesWritten > 0 ? (elapsedMs / gamesWritten / 1000).toFixed(4) : '—'
+    console.log(
+      `[scrape] ${pct}% — ${gameIndex + 1}/${count} games, ${gamesWritten} written, avg. ${avgPerGame} s/game`,
+    )
+    return pct
+  }
+  return lastLoggedPct
+}
+
+export async function playGames(count: number, modelLevel: ScrapeModelLevel, randomCoefficient: number, depth: number): Promise<string> {
   const dataDir = join(process.cwd(), '../data')
   mkdirSync(dataDir, { recursive: true })
 
@@ -138,16 +158,7 @@ export async function playGames(count: number, modelLevel: ScrapeModelLevel, ran
         console.error(`[scrape] Game ${i + 1} failed:`, error)
       }
 
-      const pct = Math.floor(((i + 1) / count) * 100)
-      if (pct > lastLoggedPct) {
-        lastLoggedPct = pct
-        const elapsedMs = Date.now() - startTime
-        const avgPerGame =
-          gamesWritten > 0 ? (elapsedMs / gamesWritten / 1000).toFixed(4) : '—'
-        console.log(
-          `[scrape] ${pct}% — ${i + 1}/${count} games, ${gamesWritten} written, avg. ${avgPerGame} s/game`,
-        )
-      }
+      lastLoggedPct = logProgress(i, count, gamesWritten, startTime, lastLoggedPct)
     }
   } finally {
     appendFileSync(outputFile, ']', 'utf8')
