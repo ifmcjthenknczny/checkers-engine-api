@@ -14,8 +14,9 @@ withDefaults(
   defineProps<{
     context: BoardContext
     restartButtonLabel?: string
+    showCapturedPieces?: boolean
   }>(),
-  { restartButtonLabel: 'restart' }
+  { restartButtonLabel: 'restart', showCapturedPieces: true }
 )
 
 const isBoardFlipped = ref<boolean>(false)
@@ -42,11 +43,11 @@ function resetGame() {
 <template>
     <GameInfo />
 
-    <CapturedPieces class="graveyard-top" :pieceColor="isBoardFlipped ? 'black' : 'white'" />
+    <CapturedPieces v-if="showCapturedPieces" class="graveyard-top" :pieceColor="isBoardFlipped ? 'black' : 'white'" />
 
     <Board :is-board-flipped="isBoardFlipped" :context="context" />
 
-    <CapturedPieces :pieceColor="isBoardFlipped ? 'white' : 'black'" />
+    <CapturedPieces v-if="showCapturedPieces" :pieceColor="isBoardFlipped ? 'white' : 'black'" />
 
     <ButtonGroup
         type="game"

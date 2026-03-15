@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import type { H3Event } from 'h3'
 import { COLORS, ALLOWED_SQUARE_CONTENT } from '~/types'
-import { DEFAULT_DEPTH, MAX_DEPTH } from './model'
+import { MAX_DEPTH } from './model'
+import { DEFAULT_OPPONENT_DEPTH } from '~/config'
 
 export const BodyRequestSchema = z.object({
   board: z
@@ -11,7 +12,7 @@ export const BodyRequestSchema = z.object({
       message: 'Allowed values are: 0 (empty), 1/-1 (pawns), 3/-3 (queens)',
     }),
   move: z.enum(COLORS),
-  depth: z.coerce.number().int().min(0).max(MAX_DEPTH).default(DEFAULT_DEPTH),
+  depth: z.coerce.number().int().min(0).max(MAX_DEPTH).default(DEFAULT_OPPONENT_DEPTH),
 })
 
 export async function parseBodyOrThrow<T>(event: H3Event, schema: z.ZodSchema<T>): Promise<T> {

@@ -13,6 +13,7 @@ import { pickBestEngineContinuation } from '@/helpers/ai'
 import { indexToRowCol } from '@/helpers/board'
 import type { Move, Player } from '@/types'
 import Loader from './ui/Loader.vue'
+import { DEFAULT_ANALYSIS_DEPTH } from '~/config'
 
 const { boardStore, gameStore, humanPlayerColor, currentPlayer, gamePhase } = useComputerOpponent()
 const { board } = storeToRefs(boardStore)
@@ -27,7 +28,9 @@ function indexToAlgebraic(index: number): string {
 }
 
 const formattedBestMove = computed<string | null>(() => {
-  if (!bestMoves.value || bestMoves.value.length === 0) return null
+  if (!bestMoves.value || bestMoves.value.length === 0) {
+    return null
+  }
   const squares = [bestMoves.value[0].fromIndex, ...bestMoves.value.map(move => move.toIndex)]
   return squares.map(indexToAlgebraic).join('->')
 })
@@ -48,7 +51,7 @@ watch(
       bestMoves.value = null
       isBestMoveLoading.value = true
       try {
-        bestMoves.value = await pickBestEngineContinuation(board.value, currentPlayer.value, 4)
+        bestMoves.value = await pickBestEngineContinuation(board.value, currentPlayer.value, DEFAULT_ANALYSIS_DEPTH)
       } catch {
         bestMoves.value = null
       } finally {
@@ -68,7 +71,7 @@ watch(
         <Board context="analysis" />
       </template>
       <template v-else>
-        <GameBoardLayout context="game" restart-button-label="stop" />
+        <GameBoardLayout :show-captured-pieces="false" context="game" restart-button-label="stop" />
       </template>
     </div>
 
@@ -112,7 +115,7 @@ watch(
 
       <template v-else>
         <div class="learn-page__eval-col">
-          <EngineEval />
+          <EngineEval :fetch-on-players="[humanPlayerColor]" />
           <div
             v-if="gamePhase === 'game'"
             class="best-move-hint"

@@ -33,6 +33,20 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 
 - **Dataset:** Generated like iteration 2 (self-play in Nuxt, `playGame()` in `checkers-web/src/server/utils/scrape.ts`), with parameters e.g. **100,000 games**, **modelLevel 2** (engine_2), **random 0.2**, **depth 3**. **Random move probability** is variable: early in the game the probability of a random move is higher (starts at 1) and decreases linearly to the `random` value; from turn 6 a constant `randomCoefficient` is used. **Minimax depth** move choice uses `pickBestEngineContinuation(..., depth)`, with introduced minimax algorithm, that basically checks what's the move to do now that leads to the best position after 3 next moves. Position and evaluation recording as in iteration 2 (including turn filtering via `shouldSaveMove` - the higher the turn, the higher probability to save position to the dataset). **Result distribution** (4 192 532 samples): −1 (black wins) 44.06%, 0 (draw) 10.49%, 1 (white wins) 45.45%.
 
+## TODO
+* Data scraping optimization for multiple cores.
+* Frontend view optimization (shorter board on desktop, better mobile experience - drag&drop)
+* Flip board in `analysis`
+* Graveyard in `learn` module
+* Input to choose `modelLevel` in `learn`
+* Animation overlay to separate component
+* Remove unused css and refactor to use mobile first approach
+* Dumber components
+* Tests
+* Model level 4
+* Websocket instead of API calls
+* Deploy
+
 ## License
 
 This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
