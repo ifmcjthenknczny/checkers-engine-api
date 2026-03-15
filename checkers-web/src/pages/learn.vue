@@ -3,5 +3,5 @@ useHead({ title: 'WARCABY - Learn' })
 </script>
 
 <template>
-  <Learn />
+  <LearnPage />
 </template>

@@ -35,7 +35,7 @@ function chooseColor(color: 'white' | 'black') {
     .question {
     text-transform: uppercase;
     font-weight: 650;
-    font-size: 2.8rem;
+    font-size: 3rem;
     align-self: center;
     text-align: center;
     font-family: $secondaryFont;
@@ -43,9 +43,9 @@ function chooseColor(color: 'white' | 'black') {
     color: color.mix(darkgray, black, 20%);
   }
 
-  @media (max-width: $breakpoint) {
+  @media (min-width: $breakpoint) {
     .question {
-      font-size: 3rem;
+      font-size: 2.8rem;
     }
   }
 </style>

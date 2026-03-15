@@ -12,25 +12,22 @@ import { findLegalMovesOfPiece, playerHasCapturePossibility, findAllLegalMoves }
 import { computed, ref, watch, nextTick } from 'vue'
 import PossibleMoveMarker from './PossibleMoveMarker.vue'
 import { useGameStore } from '@/stores/gameStore'
-import { useAnimationStore } from '~/stores/animationStore'
+import { useComputerMoveStore } from '~/stores/computerMoveStore'
 
-const props = withDefaults(
-  defineProps<{
-    isBoardFlipped?: boolean
-    context: BoardContext
-  }>(),
-  {
-    isBoardFlipped: false,
-  }
-)
+const props = defineProps<{
+  context: BoardContext
+}>()
 
-const cols = computed(() => props.isBoardFlipped ? rangeChar(BOARD_SIZE, 'a').toReversed() : rangeChar(BOARD_SIZE, 'a'))
+const boardStore = useBoardStore()
+const { board, isBoardFlipped } = storeToRefs(boardStore)
 
-const rows = computed(() => props.isBoardFlipped ? range(BOARD_SIZE, 1) : range(BOARD_SIZE, 1).toReversed())
+const cols = computed(() => isBoardFlipped.value ? rangeChar(BOARD_SIZE, 'a').toReversed() : rangeChar(BOARD_SIZE, 'a'))
+
+const rows = computed(() => isBoardFlipped.value ? range(BOARD_SIZE, 1) : range(BOARD_SIZE, 1).toReversed())
 
 const getDisplaySquareIndex = (rowIndex: number, colIndex: number) => {
-  const boardRow = props.isBoardFlipped ? BOARD_SIZE - 1 - rowIndex : rowIndex
-  const boardCol = props.isBoardFlipped ? BOARD_SIZE - 1 - colIndex : colIndex
+  const boardRow = isBoardFlipped.value ? BOARD_SIZE - 1 - rowIndex : rowIndex
+  const boardCol = isBoardFlipped.value ? BOARD_SIZE - 1 - colIndex : colIndex
   return getSquareIndex(boardRow, boardCol)
 }
 
@@ -40,13 +37,11 @@ const gridStyles = {
   gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr) 0.2fr`,
 }
 
-const boardStore = useBoardStore()
-const { board } = storeToRefs(boardStore)
 const dragStore = useDragStore()
 const { draggedIndex, dragContext } = storeToRefs(dragStore)
 const gameStore = useGameStore()
 const { currentPlayer, humanPlayerColor } = storeToRefs(gameStore)
-const animationStore = useAnimationStore()
+const animationStore = useComputerMoveStore()
 const { animatingMove, isAnimating } = storeToRefs(animationStore)
 
 const flashRedIndices = ref<Set<number>>(new Set())
@@ -71,8 +66,8 @@ watch(animatingMove, (move) => {
 
 function indexToDisplayRowCol(index: number) {
   const { row: boardRow, col: boardCol } = indexToRowCol(index)
-  const displayRow = props.isBoardFlipped ? BOARD_SIZE - 1 - boardRow : boardRow
-  const displayCol = props.isBoardFlipped ? BOARD_SIZE - 1 - boardCol : boardCol
+  const displayRow = isBoardFlipped.value ? BOARD_SIZE - 1 - boardRow : boardRow
+  const displayCol = isBoardFlipped.value ? BOARD_SIZE - 1 - boardCol : boardCol
   return { displayRow, displayCol }
 }
 
@@ -221,8 +216,8 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
 .board {
   display: grid;
   grid-auto-flow: row;
-  width: $boardSizeHorizontal;
-  height: $boardSizeHorizontal;
+  width: $boardSizeVertical;
+  height: $boardSizeVertical;
   position: relative;
 
   &--with-overlay {
@@ -240,8 +235,8 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
 
   &__moving-piece {
     position: absolute;
-    width: calc($boardSizeHorizontal / 8.2);
-    height: calc($boardSizeHorizontal / 8.2);
+    width: calc($boardSizeVertical / 8.2);
+    height: calc($boardSizeVertical / 8.2);
     transform: translate(-50%, -50%);
     transition: left 0.45s ease-out, top 0.45s ease-out;
     display: flex;
@@ -268,15 +263,15 @@ function shouldShowPossibleMoveMarker(rowIndex: number, colIndex: number) {
   }
 }
 
-@media (max-width: $breakpoint) {
+@media (min-width: $breakpoint) {
   .board {
-    width: $boardSizeVertical;
-    height: $boardSizeVertical;
+    width: $boardSizeHorizontal;
+    height: $boardSizeHorizontal;
   }
 
   .board__moving-piece {
-    width: calc($boardSizeVertical / 8.2);
-    height: calc($boardSizeVertical / 8.2);
+    width: calc($boardSizeHorizontal / 8.2);
+    height: calc($boardSizeHorizontal / 8.2);
   }
 }
 </style>

@@ -23,14 +23,14 @@ defineProps<{
     }
 
     &--game {
-      width: $boardSizeHorizontal;
+      width: $boardSizeVertical;
       justify-content: space-around;
     }
   }
 
-  @media (max-width: $breakpoint) {
+  @media (min-width: $breakpoint) {
     .button-container--game {
-      width: $boardSizeVertical;
+      width: $boardSizeHorizontal;
     }
   }
 </style>

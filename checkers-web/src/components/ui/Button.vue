@@ -27,6 +27,7 @@ const emit = defineEmits<{
   </button>
 </template>
 <style lang="scss" scoped>
+// TODO: Use mobile first approach
 @use 'sass:color';
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,550;0,650;0,700;0,900;1,400&display=swap');
 
@@ -56,13 +57,13 @@ const emit = defineEmits<{
 
   &--color {
     font-size: 1.6rem;
-    width: 200px;
-    height: 75px;
+    width: 30vw;
+    height: 45px;
 
     &.button--small {
-      font-size: 1.35rem;
-      width: 135px;
-      height: 52px;
+      width: 42vw;
+      height: 46px;
+      font-size: 1rem;
     }
   }
 
@@ -103,19 +104,23 @@ const emit = defineEmits<{
   }
 }
 
-@media (max-width: $breakpoint) {
+@media (min-width: $breakpoint) {
   .button {
     &--color {
-      width: 30vw;
-      height: 45px;
+      width: 200px;
+      height: 75px;
 
       &.button--small {
-        width: 42vw;
-        height: 46px;
-        font-size: 1rem;
+        font-size: 1.35rem;
+        width: 135px;
+        height: 52px;
       }
     }
-
+  }
+}
+    
+@media (max-width: $breakpoint) {
+  .button {
     &--white {
       background-color: white;
       font-weight: 900;

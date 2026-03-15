@@ -35,6 +35,19 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 - **Model:** MLP with **33 inputs**: 32 board squares + side to move. Layout: 512→256→128→64→1, BatchNorm and LeakyReLU(0.1) after every layer, Dropout(0.1) after the first layer, Tanh at the end. Larger capacity than iteration 2 (added 512-unit layer at the front). Exported as `engine_3.onnx`.
 - **Training:** MSE, Adam lr **0.002**, weight decay 1e−4, 90% training/10% validation split, early stopping patience **15** (min delta 1e−4), ReduceLROnPlateau (patience 5, factor 0.5), batch **4096**, **200** epochs max, gradient clipping 1.0. **Target:** fixed-weight blend of engine evaluation and game result — **0.3 × eval + 0.7 × result** (unlike iteration 2's learnable softmax weights). Run finished after **116 epochs**; final Train Loss **0.2791**→**0.2577**, Val Loss **0.2768**→**0.2578**.
 
+## TODO
+* Frontend view optimization (shorter board on desktop, better mobile experience - drag&drop)
+* Input to choose `modelLevel` in `learn`
+
+* Data scraping optimization for multiple cores.
+* Graveyard in `learn` module
+* Animation overlay into separate component
+* Dumber components that don't reach global state that much
+* Tests
+* Model level 4
+* Websocket instead of API calls
+* Deploy
+
 ## License
 
 This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).

@@ -6,6 +6,15 @@ import { STARTING_BOARD_STATE, EMPTY_BOARD_STATE } from '@/helpers/board'
 
 export const useBoardStore = defineStore('board', () => {
   const board = ref<BoardPosition>(STARTING_BOARD_STATE)
+  const isBoardFlipped = ref(false)
+
+  function setBoardFlipped(flipped: boolean) {
+    isBoardFlipped.value = flipped
+  }
+
+  function toggleBoardFlipped() {
+    isBoardFlipped.value = !isBoardFlipped.value
+  }
 
   function setBoardState(newBoardState: BoardPosition) {
     board.value = newBoardState
@@ -36,10 +45,14 @@ export const useBoardStore = defineStore('board', () => {
 
   function resetToDefault() {
     board.value = [...STARTING_BOARD_STATE]
+    isBoardFlipped.value = false
   }
 
   return {
     board,
+    isBoardFlipped,
+    setBoardFlipped,
+    toggleBoardFlipped,
     setBoardState,
     movePiece,
     applyMove,

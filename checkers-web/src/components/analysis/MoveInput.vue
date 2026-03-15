@@ -6,12 +6,18 @@ import { useGameStore } from '@/stores/gameStore'
 const gameStore = useGameStore()
 const { currentPlayer } = storeToRefs(gameStore)
 
+const props = withDefaults(
+  defineProps<{
+    fullLabel?: boolean
+  }>(),
+  { fullLabel: true }
+)
 
-const label = computed(() => (currentPlayer.value === 'white' ? 'White to move' : 'Black to move'))
+const label = computed(() => (currentPlayer.value === 'white' ? `${props.fullLabel ? 'White to move' : 'White'}` : `${props.fullLabel ? 'Black to move' : 'Black'}`))
 </script>
 
 <template>
-    <div class="game-info game-info__who-to-move">
+    <div class="move-input move-input__who-to-move">
       <button
         class="toggle-button"
         :class="{ 'is-black': currentPlayer === 'black' }"
@@ -27,11 +33,10 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'White to move' 
 </template>
 
 <style lang="scss" scoped>
-.game-info {
+.move-input {
   min-width: 160px;
   display: flex;
   flex-direction: row;
-  justify-content: center;
   text-transform: uppercase;
   font-weight: 550;
   width: 100%;
@@ -39,7 +44,6 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'White to move' 
   align-items: center;
 
   &__who-to-move {
-    display: flex;
     align-items: center;
     gap: 12px;
 
@@ -111,9 +115,9 @@ const label = computed(() => (currentPlayer.value === 'white' ? 'White to move' 
   }
 }
 
-@media (max-width: $breakpoint) {
-  .game-info {
-    font-size: 1rem;
+@media (min-width: $breakpoint) {
+  .move-input {
+    font-size: 1.2rem;
   }
 }
 </style>

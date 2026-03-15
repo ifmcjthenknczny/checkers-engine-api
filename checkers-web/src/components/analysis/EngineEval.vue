@@ -5,6 +5,16 @@ import { useBoardStore } from '@/stores/boardStore'
 import { useDebouncedWatch } from '@/hooks/useDebouncedWatch'
 import { useGameStore } from '@/stores/gameStore'
 import { evaluateBoard } from '@/helpers/engine'
+import type { Player } from '~/types'
+
+const props = withDefaults(
+  defineProps<{
+    fetchOnPlayers?: Player[] | null
+  }>(),
+  {
+    fetchOnPlayers: () => ['black', 'white']
+  }
+)
 
 const boardStore = useBoardStore()
 const { board } = storeToRefs(boardStore)
@@ -28,7 +38,11 @@ const fetchEvaluation = async () => {
   }
 }
 
-useDebouncedWatch([board, currentPlayer], fetchEvaluation, 200)
+useDebouncedWatch([board, currentPlayer], () => {
+  if (props.fetchOnPlayers.includes(currentPlayer.value)) {
+    fetchEvaluation()
+  }
+}, 200)
 fetchEvaluation()
 
 const formatEvaluation = (val: number | null) => {

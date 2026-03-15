@@ -5,7 +5,7 @@ import { getPieceColor, isQueen } from '@/helpers/board'
 import { useGameStore } from '@/stores/gameStore'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
-import { useAnimationStore } from '~/stores/animationStore'
+import { useComputerMoveStore } from '~/stores/computerMoveStore'
 
 interface Props {
   piece: SquareContent
@@ -19,7 +19,7 @@ const props = defineProps<Props>()
 const dragStore = useDragStore()
 const gameStore = useGameStore()
 const { humanPlayerColor } = storeToRefs(gameStore)
-const animationStore = useAnimationStore()
+const animationStore = useComputerMoveStore()
 const { isAnimating } = storeToRefs(animationStore)
 
 const drag = () => {
@@ -62,7 +62,7 @@ const canBeDragged = computed(() => {
   width: $pieceSize;
   height: $pieceSize;
   border-radius: 50%;
-  border: 2.5px solid;
+  border: 1.7px solid;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,7 +107,7 @@ const canBeDragged = computed(() => {
     border-radius: 50%;
     width: calc($pieceSize / 1.5);
     height: calc($pieceSize / 1.5);
-    border: 1.5px solid;
+    border: 1.2px solid;
 
     &-won {
       border-radius: 50%;
@@ -160,12 +160,12 @@ const canBeDragged = computed(() => {
   animation: flash-red 0.55s ease-in-out;
 }
 
-@media (max-width: $breakpoint) {
+@media (min-width: $breakpoint) {
   .piece {
-    border-width: 1.7px;
+    border-width: 2.5px;
 
     &--queen-decoration {
-      border-width: 1.2px;
+      border-width: 1.5px;
     }
   }
 }

@@ -12,6 +12,9 @@
 html {
   font-family: $globalFont;
   font-size: clamp(10px, $nameSquareSizeVertical, 20px);
+  @media (min-width: $breakpoint) {
+    font-size: 20px;
+  }
 }
 
 body {
@@ -30,11 +33,5 @@ main {
   flex: 1;
   width: 100%;
   min-height: 0;
-}
-
-@media (min-width: $breakpoint) {
-  html {
-    font-size: 20px;
-  }
 }
 </style>

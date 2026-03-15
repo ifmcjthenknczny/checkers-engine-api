@@ -12,5 +12,5 @@ export default defineEventHandler(async (event) => {
 
   const { moves } = await pickBestContinuationWithDepth(board as BoardPosition, playerColor, depth)
 
-  return moves
+  return {continuation: moves}
 })

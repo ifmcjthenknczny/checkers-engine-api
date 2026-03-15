@@ -3,10 +3,10 @@ import { z } from 'zod'
 import path from 'node:path'
 import { type ModelLevel, MODEL_LEVELS, type Player, type BoardPosition, type Move } from '~/types'
 import { findAllLegalContinuations, applyMove } from '~/helpers/move'
+import { DEFAULT_MODEL_LEVEL } from '~/config'
 
 type PlayerToMove = -1 | 1
 
-export const DEFAULT_DEPTH = 6
 export const MAX_DEPTH = 20
 
 let session: ort.InferenceSession | null = null
@@ -112,8 +112,6 @@ export async function pickBestContinuationWithDepth(
 
   return { moves: continuations[bestIndex] ?? [], score: scores[bestIndex] }
 }
-
-export const DEFAULT_MODEL_LEVEL: ModelLevel = MODEL_LEVELS.at(-1)!
 
 export const ModelLevelSchema = z.enum(MODEL_LEVELS.map(level => level.toString()), {
   message: `Model level is invalid. Must be one of: ${MODEL_LEVELS.join(', ')}`,

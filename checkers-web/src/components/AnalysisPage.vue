@@ -2,12 +2,17 @@
 import Board from '@/components/board/Board.vue'
 import EvaluationPanel from '@/components/analysis/EvaluationPanel.vue'
 import PieceToolbox from '@/components/piece/PieceToolbox.vue'
+import ButtonGroup from '@/components/ui/ButtonGroup.vue'
+import FlipBoardButton from '@/components/ui/FlipBoardButton.vue'
 </script>
 
 <template>
   <div class="analysis-page">
     <div class="analysis-page__board-col">
       <Board context="analysis" />
+      <ButtonGroup type="game">
+        <FlipBoardButton />
+      </ButtonGroup>
     </div>
     <aside class="analysis-page__side">
       <div class="analysis-page__analysis-col">
@@ -32,6 +37,9 @@ import PieceToolbox from '@/components/piece/PieceToolbox.vue'
 
 .analysis-page__board-col {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   flex-shrink: 0;
   justify-content: center;
 }

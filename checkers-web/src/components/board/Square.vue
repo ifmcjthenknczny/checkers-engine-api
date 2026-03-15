@@ -9,7 +9,7 @@ import { playerMove } from '@/helpers/turn'
 import { getLegalMove } from '@/helpers/move'
 import { useBoardStore } from '@/stores/boardStore'
 import { useGameCallbacks } from '@/hooks/useGameCallbacks'
-import { useAnimationStore } from '~/stores/animationStore'
+import { useComputerMoveStore } from '~/stores/computerMoveStore'
 
 interface Props {
   position: [number, number]
@@ -30,7 +30,7 @@ const { board } = storeToRefs(boardStore)
 
 const gameStore = useGameStore()
 const { humanPlayerColor, currentPlayer, queenMovesWithoutCaptureStreak } = storeToRefs(gameStore)
-const animationStore = useAnimationStore()
+const animationStore = useComputerMoveStore()
 const { isAnimating } = storeToRefs(animationStore)
 
 
