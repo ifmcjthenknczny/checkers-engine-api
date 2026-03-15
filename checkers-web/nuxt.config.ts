@@ -49,9 +49,6 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'node-server',
-    externals: {
-      external: ['onnxruntime-node'],
-    },
+    preset: process.env.NODE_ENV === 'production' ? 'vercel' : 'node-server',
   },
 })
