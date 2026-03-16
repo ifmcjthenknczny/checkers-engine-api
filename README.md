@@ -8,7 +8,7 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 
 - **checkers-web** — Nuxt frontend: board, gameplay, position analysis using the ONNX model with API
 - **ml-core** — Model training (PyTorch): loading data, training, export to ONNX
-- **models/** — Exported ONNX models used by the app
+- **models** — Exported ONNX models used by the app
 
 ## Running the project
 
@@ -31,7 +31,7 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 
 ### Iteration 3 (current model)
 
-- **Dataset:** Generated like iteration 2 (self-play in Nuxt, `playGame()` in `checkers-web/src/server/utils/scrape.ts`), with parameters e.g. **100,000 games**, **modelLevel 2** (engine_2), **random 0.2**, **depth 3**. **Random move probability** varies: early in the game the probability of a random move is higher (starts at 1) and decreases linearly to the `random` value and from turn 6 onwards a constant `randomCoefficient` is used. **Minimax depth** move choice uses `pickBestEngineContinuation(..., depth)`, with introduced minimax algorithm, that basically checks what's the move to do now that leads to the best position after 3 next moves. Position and evaluation recording as in iteration 2 (including turn filtering via `shouldSaveMove` - the higher the turn, the higher probability to save position to the dataset). **Result distribution** (4 019 772 samples): −1 (black wins) 46.16%, 0 (draw) 6.60%, 1 (white wins) 47.24%.
+- **Dataset:** Generated like iteration 2 (self-play in Nuxt, `playGame()` in `checkers-web/src/server/utils/scrape.ts`), with parameters **100,000 games**, **modelLevel 2** (engine_2), **random 0.2**, **depth 3**. **Random move probability** varies: early in the game the probability of a random move is higher (starts at 1) and decreases linearly to the `random` value and from turn 6 onwards a constant `randomCoefficient` is used. **Minimax depth** move choice uses `pickBestEngineContinuation(..., depth)`, with introduced minimax algorithm, that basically checks what's the move to do now that leads to the best position after 3 next moves. Position and evaluation recording as in iteration 2 (including turn filtering via `shouldSaveMove` - the higher the turn, the higher probability to save position to the dataset). **Result distribution** (4 019 772 samples): −1 (black wins) 46.16%, 0 (draw) 6.60%, 1 (white wins) 47.24%.
 - **Model:** MLP with **33 inputs**: 32 board squares + side to move. Layout: 512→256→128→64→1, BatchNorm and LeakyReLU(0.1) after every layer, Dropout(0.1) after the first layer, Tanh at the end. Larger capacity than iteration 2 (added 512-unit layer at the front). Exported as `engine_3.onnx`.
 - **Training:** MSE, Adam lr **0.002**, weight decay 1e−4, 90% training/10% validation split, early stopping patience **15** (min delta 1e−4), ReduceLROnPlateau (patience 5, factor 0.5), batch **4096**, **200** epochs max, gradient clipping 1.0. **Target:** fixed-weight blend of engine evaluation and game result — **0.3 × eval + 0.7 × result** (unlike iteration 2's learnable softmax weights). Run finished after **116 epochs**; final Train Loss **0.2791**→**0.2577**, Val Loss **0.2768**→**0.2578**.
 
