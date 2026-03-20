@@ -61,10 +61,8 @@ function shouldPruneVariant(args: {
   delta: number
 }): boolean {
   if (args.isMaximizing) {
-    // Maximizing prefers higher scores. Prune if candidate is too far below best.
     return args.bestShallowScore - args.candidateShallowScore >= args.delta
   }
-  // Minimizing prefers lower scores. Prune if candidate is too far above best.
   return args.candidateShallowScore - args.bestShallowScore >= args.delta
 }
 
@@ -97,12 +95,12 @@ function filterCandidatesByDelta(candidates: ShallowCandidate[], isMaximizing: b
   }))
 }
 
-export async function evaluateBoardDeeply(
+async function evaluateBoardDeeplyWithBounds(
   board: BoardPosition,
   currentPlayer: Player,
   depth: number,
-  alpha = -Infinity,
-  beta = Infinity,
+  alpha: number,
+  beta: number,
 ): Promise<number> {
   if (depth === 0) return evaluateBoardShallow(board, currentPlayer)
 
@@ -154,7 +152,7 @@ export async function evaluateBoardDeeply(
   let best = isMaximizing ? -Infinity : Infinity
   if (candidates) {
     for (const candidate of candidates) {
-      const score = await evaluateBoardDeeply(candidate.resultBoard, opponent, depth - 1, alpha, beta)
+      const score = await evaluateBoardDeeplyWithBounds(candidate.resultBoard, opponent, depth - 1, alpha, beta)
       if (isMaximizing) {
         best = Math.max(best, score)
         alpha = Math.max(alpha, best)
@@ -168,7 +166,7 @@ export async function evaluateBoardDeeply(
   } else {
     for (const moves of continuations) {
       const resultBoard = applyMovesToBoard(board, moves)
-      const score = await evaluateBoardDeeply(resultBoard, opponent, depth - 1, alpha, beta)
+      const score = await evaluateBoardDeeplyWithBounds(resultBoard, opponent, depth - 1, alpha, beta)
       if (isMaximizing) {
         best = Math.max(best, score)
         alpha = Math.max(alpha, best)
@@ -182,6 +180,17 @@ export async function evaluateBoardDeeply(
   }
 
   return best
+}
+
+export async function evaluateBoardDeeply(
+  board: BoardPosition,
+  currentPlayer: Player,
+  depth: number,
+  bounds?: { alpha?: number; beta?: number },
+): Promise<number> {
+  const alpha = bounds?.alpha ?? -Infinity
+  const beta = bounds?.beta ?? Infinity
+  return evaluateBoardDeeplyWithBounds(board, currentPlayer, depth, alpha, beta)
 }
 
 export async function pickBestContinuationWithDepth(
@@ -223,7 +232,7 @@ export async function pickBestContinuationWithDepth(
   let bestScore = isMaximizing ? -Infinity : Infinity
 
   for (const candidate of candidates) {
-    const score = await evaluateBoardDeeply(candidate.resultBoard, opponent, clampedDepth - 1, alpha, beta)
+    const score = await evaluateBoardDeeplyWithBounds(candidate.resultBoard, opponent, clampedDepth - 1, alpha, beta)
 
     if (isMaximizing) {
       if (score > bestScore) {
