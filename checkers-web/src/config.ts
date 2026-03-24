@@ -9,8 +9,8 @@ export const SCRAPE_CONFIG = {
 }
 
 export const DEPTH_CONFIG = {
-    analysisDefault: 5,
-    opponentDefault: 5,
+    analysisDefault: 4,
+    opponentDefault: 4,
     max: 20
 }
 

@@ -51,8 +51,7 @@ function shouldSaveMove(moveNumber: number): boolean {
   return min + (max - min) * sigmoid > Math.random();
 }
 
-const shouldRandomizeMove = (randomCoefficient: number, moveNumber: number): boolean => {
-  const turnFlatpoint = 6;
+const shouldRandomizeMove = (randomCoefficient: number, moveNumber: number, turnFlatpoint = 6): boolean => {
   const turn = Math.floor(moveNumber / 2);
   if (turn > turnFlatpoint) {
     return randomCoefficient > Math.random();

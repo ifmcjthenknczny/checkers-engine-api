@@ -257,6 +257,7 @@ export function applyMove(board: BoardPosition, move: Move): { boardAfter: Board
   return { boardAfter, hasTurnEnded }
 }
 
+// TODO: is this function necessary or do we actually duplicate some logic this way?
 export function applyMovesToBoard(board: BoardPosition, moves: Move[]): BoardPosition {
   return moves.reduce(
     (boardPosition, move) => applyMove(boardPosition, move).boardAfter,
