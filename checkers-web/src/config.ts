@@ -9,14 +9,14 @@ export const SCRAPE_CONFIG = {
 }
 
 export const DEPTH_CONFIG = {
-    analysisDefault: 4,
-    opponentDefault: 4,
+    analysisDefault: 6,
+    opponentDefault: 6,
     max: 20,
 }
 
 export const PRUNE_CONFIG = {
-    delta: 0.4,
-    maxBestContinuations: 6
+    delta: 0.2,
+    maxBestContinuations: 4
   }
 
 export const MODEL_CONFIG: Record<string, ModelLevel> = {
