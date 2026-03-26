@@ -257,6 +257,13 @@ export function applyMove(board: BoardPosition, move: Move): { boardAfter: Board
   return { boardAfter, hasTurnEnded }
 }
 
+export function applyMovesToBoard(board: BoardPosition, moves: Move[]): BoardPosition {
+  return moves.reduce(
+    (boardPosition, move) => applyMove(boardPosition, move).boardAfter,
+    [...board],
+  )
+}
+
 export const isChainedCapturePossible = (boardAfterMove: BoardPosition, move: Move) => {
   const immediateChainedCaptures = findImmediateChainedCaptures(boardAfterMove, move)
   return immediateChainedCaptures.length > 0

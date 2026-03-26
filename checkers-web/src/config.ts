@@ -1,9 +1,32 @@
-import { MODEL_LEVELS, type ModelLevel } from "./types"
+import { MODEL_LEVELS, type ModelLevel, type Player } from "./types"
 
 export const BOARD_SIZE = 8
 
-export const SCRAPE_LOG_EVERY_GAMES = 100
 
-export const DEFAULT_ANALYSIS_DEPTH = 4
-export const DEFAULT_OPPONENT_DEPTH = 4
-export const DEFAULT_MODEL_LEVEL: ModelLevel = MODEL_LEVELS.at(-1)!
+export const SCRAPE_CONFIG = {
+    maxGames: 100_000,
+    logEvery: 100
+}
+
+export const DEPTH_CONFIG = {
+    analysisDefault: 6,
+    opponentDefault: 6,
+    max: 20,
+}
+
+export const PRUNE_CONFIG = {
+    delta: 0.2,
+    maxBestContinuations: 4
+  }
+
+export const MODEL_CONFIG: Record<string, ModelLevel> = {
+    analysis: MODEL_LEVELS.at(-1)!,
+    opponent: MODEL_LEVELS.at(-1)!,
+}
+
+export const BEST_EVAL: Record<Player, number> = {
+    white: 1,
+    black: -1
+} 
+
+export const USE_ALPHA_BETA = true

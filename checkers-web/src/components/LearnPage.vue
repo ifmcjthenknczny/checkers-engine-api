@@ -13,7 +13,7 @@ import { pickBestEngineContinuation } from '@/helpers/ai'
 import { indexToRowCol } from '@/helpers/board'
 import type { Move, Player } from '@/types'
 import Loader from './ui/Loader.vue'
-import { DEFAULT_ANALYSIS_DEPTH } from '~/config'
+import { DEPTH_CONFIG, MODEL_CONFIG } from '~/config'
 
 const { boardStore, gameStore, humanPlayerColor, currentPlayer, gamePhase } = useComputerOpponent()
 const { board } = storeToRefs(boardStore)
@@ -51,7 +51,7 @@ watch(
       bestMoves.value = null
       isBestMoveLoading.value = true
       try {
-        bestMoves.value = await pickBestEngineContinuation(board.value, currentPlayer.value, DEFAULT_ANALYSIS_DEPTH)
+        bestMoves.value = await pickBestEngineContinuation(board.value, currentPlayer.value, DEPTH_CONFIG.analysisDefault, MODEL_CONFIG.analysis)
       } catch {
         bestMoves.value = null
       } finally {

@@ -9,6 +9,7 @@ import { pickBestEngineContinuation } from '@/helpers/ai'
 import { determineGameResult } from '@/helpers/gameOver'
 import { sleep } from '@/helpers/utils'
 import type { Move } from '@/types'
+import { DEPTH_CONFIG, MODEL_CONFIG } from '~/config'
 
 const MOVE_ANIMATION_MS = 500
 
@@ -40,7 +41,8 @@ export function useComputerOpponent() {
             gameOverCallback,
             moveCallback,
             turnOverCallback,
-            movePickingStrategy: pickBestEngineContinuation,
+            movePickingStrategy: (board, playerColor) => pickBestEngineContinuation(board, playerColor, DEPTH_CONFIG
+              .opponentDefault, MODEL_CONFIG.opponent),
             beforeMoveCallback: async (move: Move) => {
               setIsThinking(false)
               setAnimatingMove(move)

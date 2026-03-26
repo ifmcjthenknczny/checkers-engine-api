@@ -43,13 +43,13 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 * Move animation overlay into separate component.
 * Simplified components to reduce reliance on global state.
 
-* Train model level 4.
 * Alpha/beta tree move pruning algorithm for better performance. 
+* Train model level 4 using previous model with huge depth and alpha/beta algorithm that is getting rid of pointless paths.
 * Data scraping optimization for multiple cores.
 
 * Switch from API calls to websocket communication.
 
-* Deployment to a service that will gladly handle this 375 MB serverless app.
+* Deployment to a service that will gladly handle this 375 MB serverless app (ONNX package weighs this much) or change approach.
 
 ## License
 

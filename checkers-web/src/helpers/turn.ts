@@ -10,6 +10,10 @@ type Callbacks = {
     afterMoveCallback?: () => void
 }
 
+export function otherPlayer(player: Player): Player {
+    return player === 'white' ? 'black' : 'white'
+}
+
 function applySingleMoveAndPossiblyEndTurn(
     board: BoardPosition,
     move: Move,
