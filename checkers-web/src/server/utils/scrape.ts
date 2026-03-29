@@ -129,6 +129,7 @@ export async function playGames(
   randomCoefficient: number,
   depth: number,
   outputPath: string,
+  onGameComplete?: (written: boolean) => void,
 ): Promise<string> {
   mkdirSync(dirname(outputPath), { recursive: true })
 
@@ -140,22 +141,30 @@ export async function playGames(
 
   try {
     for (let i = 0; i < count; i++) {
+      let written = false
       try {
         const gameData = await playGame(modelLevel, randomCoefficient, depth)
         const prefix = gamesWritten > 0 ? ',' : ''
         appendFileSync(outputFile, `${prefix}${JSON.stringify(gameData).slice(1, -1)}`, 'utf8')
         gamesWritten++
+        written = true
       } catch (error) {
         console.error(`[scrape] Game ${i + 1} failed:`, error)
       }
 
-      logProgress(i, count, gamesWritten, startTime)
+      if (onGameComplete) {
+        onGameComplete(written)
+      } else {
+        logProgress(i, count, gamesWritten, startTime)
+      }
     }
   } finally {
     appendFileSync(outputFile, ']', 'utf8')
   }
 
-  const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)
-  console.log(`[scrape] ${gamesWritten}/${count} games completed in ${totalSec}s. Output: ${outputFile}`)
+  if (!onGameComplete) {
+    const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)
+    console.log(`[scrape] ${gamesWritten}/${count} games completed in ${totalSec}s. Output: ${outputFile}`)
+  }
   return outputFile
 }
