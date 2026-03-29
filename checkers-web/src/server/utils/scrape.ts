@@ -7,7 +7,7 @@ import { determineGameResult } from '~/helpers/gameOver'
 import { pickRandomContinuation } from '~/helpers/ai'
 import { evaluateBoardDeeply, pickBestContinuationWithDepth } from './eval'
 import { ensureModelLoaded } from './model'
-import { SCRAPE_CONFIG, USE_ALPHA_BETA } from '~/config'
+import { SCRAPE_CONFIG } from '~/config'
 
 type JsonGameResult = -1 | 0 | 1
 type JsonPlayerMove = 1 | -1
@@ -81,7 +81,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       return mapGameDataToJson(turns, gameResult)
     }
 
-    const continuation: { moves: Move[], score?: number } = (!modelLevel || shouldRandomizeMove(randomCoefficient, moveNumber)) ? { moves: pickRandomContinuation(board, currentPlayer) } : await pickBestContinuationWithDepth(board, currentPlayer, depth, {useAlphaBeta: USE_ALPHA_BETA})
+    const continuation: { moves: Move[], score?: number } = (!modelLevel || shouldRandomizeMove(randomCoefficient, moveNumber)) ? { moves: pickRandomContinuation(board, currentPlayer) } : await pickBestContinuationWithDepth(board, currentPlayer, depth)
 
     if (continuation.moves.length === 0) {
       const winner = currentPlayer === 'white' ? 'black' : 'white'

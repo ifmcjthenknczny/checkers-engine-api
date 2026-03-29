@@ -8,23 +8,21 @@ import { otherPlayer } from '~/helpers/turn'
 
 type JsonPlayerToMove = -1 | 1
 
-type AlphaBetaOptions = { alpha?: number; beta?: number; useAlphaBeta: boolean }
-
 type AlphaBetaState = { bestScore: number; alpha: number; beta: number }
 
 function toJsonPlayerToMove(player: Player): JsonPlayerToMove {
   return player === 'white' ? 1 : -1
 }
 
-function shouldPruneByDelta(useAlphaBeta: boolean, continuationsCount: number): boolean {
-  return useAlphaBeta && continuationsCount >= PRUNE_CONFIG.maxBestContinuations
+function shouldPruneByDelta(useVariantPruning: boolean, continuationsCount: number): boolean {
+  return useVariantPruning && continuationsCount >= PRUNE_CONFIG.maxBestContinuations
 }
 
-function initAlphaBetaState(isMaximizing: boolean, bounds: AlphaBetaOptions): AlphaBetaState {
+function initAlphaBetaState(isMaximizing: boolean): AlphaBetaState {
   return {
     bestScore: isMaximizing ? -Infinity : Infinity,
-    alpha: bounds.alpha ?? -Infinity,
-    beta: bounds.beta ?? Infinity,
+    alpha: -Infinity,
+    beta: Infinity,
   }
 }
 
@@ -107,19 +105,18 @@ export async function evaluateBoardDeeply(
   board: BoardPosition,
   currentPlayer: Player,
   depth: number,
-  bounds: AlphaBetaOptions = { useAlphaBeta: true },
 ): Promise<number> {
-  if (bounds.useAlphaBeta) {
-    return evaluateBoardDeeplyWithAlphaBeta(board, currentPlayer, depth, bounds)
+  const useVariantPruning = PRUNE_CONFIG.enabled
+  if (useVariantPruning) {
+    return evaluateBoardDeeplyWithVariantPruning(board, currentPlayer, depth)
   }
   return evaluateBoardDeeplyWithoutAlphaBeta(board, currentPlayer, depth)
 }
 
-async function evaluateBoardDeeplyWithAlphaBeta(
+async function evaluateBoardDeeplyWithVariantPruning(
   board: BoardPosition,
   currentPlayer: Player,
   depth: number,
-  bounds: AlphaBetaOptions,
 ): Promise<number> {
   if (depth === 0) {
       return evaluateBoardShallow(board, currentPlayer)
@@ -132,9 +129,10 @@ async function evaluateBoardDeeplyWithAlphaBeta(
 
   const opponent = otherPlayer(currentPlayer)
   const isMaximizing = currentPlayer === 'white'
-  const shouldPrune = shouldPruneByDelta(bounds.useAlphaBeta, continuations.length)
-  let state = initAlphaBetaState(isMaximizing, bounds)
-  const applyScore = bounds.useAlphaBeta ? applyAlphaBetaScore : applyAlphaBetaScoreNoPrune
+  const useVariantPruning = PRUNE_CONFIG.enabled
+  const shouldPrune = shouldPruneByDelta(useVariantPruning, continuations.length)
+  let state = initAlphaBetaState(isMaximizing)
+  const applyScore = useVariantPruning ? applyAlphaBetaScore : applyAlphaBetaScoreNoPrune
 
   if (depth === 1) {
     const candidates = await buildCandidatesForRootSearch(board, continuations, opponent, isMaximizing, shouldPrune)
@@ -154,7 +152,7 @@ async function evaluateBoardDeeplyWithAlphaBeta(
     : continuations.map((moves) => applyMovesToBoard(board, moves))
 
   for (const resultBoard of resultBoards) {
-    const score = await evaluateBoardDeeply(resultBoard, opponent, depth - 1, bounds)
+    const score = await evaluateBoardDeeply(resultBoard, opponent, depth - 1)
     const {state: nextState, shouldBreak} = applyScore(state, score, isMaximizing)
     state = nextState
     if (shouldBreak) {
@@ -194,7 +192,7 @@ async function evaluateBoardDeeplyWithoutAlphaBeta(
   let bestScore = isMaximizing ? -Infinity : Infinity
   for (const moves of continuations) {
     const resultBoard = applyMovesToBoard(board, moves)
-    const score = await evaluateBoardDeeply(resultBoard, opponent, depth - 1, { useAlphaBeta: false })
+    const score = await evaluateBoardDeeply(resultBoard, opponent, depth - 1)
     bestScore = isMaximizing ? Math.max(bestScore, score) : Math.min(bestScore, score)
   }
   return bestScore
@@ -204,7 +202,6 @@ export async function pickBestContinuationWithDepth(
   board: BoardPosition,
   player: Player,
   depth: number,
-  bounds: AlphaBetaOptions
 ): Promise<{moves: Move[], score: number}> {
   const continuations = findAllLegalContinuations(board, player)
   if (continuations.length === 0) {
@@ -213,10 +210,11 @@ export async function pickBestContinuationWithDepth(
 
   const opponent = otherPlayer(player)
   const isMaximizing = player === 'white'
+  const useVariantPruning = PRUNE_CONFIG.enabled
 
   let candidates = await buildSortedShallowCandidates(board, continuations, opponent)
 
-  const shouldPrune = shouldPruneByDelta(bounds.useAlphaBeta, continuations.length)
+  const shouldPrune = shouldPruneByDelta(useVariantPruning, continuations.length)
 
   if (shouldPrune) {
     candidates = filterCandidatesByDelta(candidates, isMaximizing, PRUNE_CONFIG.delta).slice(0, PRUNE_CONFIG.maxBestContinuations)
@@ -229,21 +227,14 @@ export async function pickBestContinuationWithDepth(
 
   let bestMoves: Move[] = bestCandidate.moves
 
-  let state = initAlphaBetaState(isMaximizing, bounds)
-  const applyScore = bounds.useAlphaBeta ? applyAlphaBetaScore : applyAlphaBetaScoreNoPrune
+  let state = initAlphaBetaState(isMaximizing)
+  const applyScore = useVariantPruning  ? applyAlphaBetaScore : applyAlphaBetaScoreNoPrune
 
   for (const candidate of candidates) {
     const score = await evaluateBoardDeeply(
       candidate.resultBoard,
       opponent,
       depth - 1,
-      bounds.useAlphaBeta
-        ? {
-            ...bounds,
-            alpha: state.alpha,
-            beta: state.beta,
-          }
-        : { useAlphaBeta: false },
     )
 
     if (isMaximizing ? score > state.bestScore : score < state.bestScore) {

@@ -15,6 +15,7 @@ export const DEPTH_CONFIG = {
 }
 
 export const PRUNE_CONFIG = {
+    enabled: true,
     delta: 0.2,
     maxBestContinuations: 4
   }
@@ -28,5 +29,3 @@ export const BEST_EVAL: Record<Player, number> = {
     white: 1,
     black: -1
 } 
-
-export const USE_ALPHA_BETA = true
