@@ -1,5 +1,5 @@
 import { writeFileSync, appendFileSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
 import type { BoardPosition, GameResult, Move, Player, ScrapeModelLevel } from '~/types'
 import { STARTING_BOARD_STATE, isQueen } from '~/helpers/board'
 import { applyMove } from '~/helpers/move'
@@ -128,13 +128,11 @@ export async function playGames(
   modelLevel: ScrapeModelLevel,
   randomCoefficient: number,
   depth: number,
+  outputPath: string,
 ): Promise<string> {
-  const dataDir = join(process.cwd(), '../data')
-  mkdirSync(dataDir, { recursive: true })
+  mkdirSync(dirname(outputPath), { recursive: true })
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const outputFile = join(dataDir, `games_${timestamp}.json`)
-
+  const outputFile = outputPath
   writeFileSync(outputFile, '[', 'utf8')
 
   let gamesWritten = 0

@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 import type { ScrapeModelLevel } from '~/types'
 import { playGames } from '#server/utils/scrape'
 
@@ -17,8 +19,23 @@ export default defineTask({
     if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'development') {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
+
     const { games, modelLevel, random, depth } = payload as Payload
-    const outputFile = await playGames(games, modelLevel, random, depth)
-    return { result: { outputFile } }
+    const cores = Math.max(1, parseInt(process.env.CORES ?? '1', 10))
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const folderName = `games_${timestamp}`
+    const folder = join(process.cwd(), '..', 'data', folderName)
+    mkdirSync(folder, { recursive: true })
+
+    const gamesPerWorker = Math.ceil(games / cores)
+
+    const files = await Promise.all(
+      Array.from({ length: cores }, (_, i) =>
+        playGames(gamesPerWorker, modelLevel, random, depth, join(folder, `${i + 1}.json`)),
+      ),
+    )
+
+    return { result: { folder, files } }
   },
 })

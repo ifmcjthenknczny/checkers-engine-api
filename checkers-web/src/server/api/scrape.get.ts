@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { type ScrapeModelLevel, MODEL_LEVELS } from '~/types'
-import { playGames } from '#server/utils/scrape'
 import { DEPTH_CONFIG, SCRAPE_CONFIG } from '~/config'
 
 const QuerySchema = z.object({
@@ -28,8 +27,8 @@ export default defineEventHandler((event) => {
 
   const { games, modelLevel, random, depth } = parsed.data
 
-  playGames(games, modelLevel as ScrapeModelLevel, random, depth).catch((error) =>
-    console.error('[scrape] Fatal error:', error),
+  runTask('scrape', { payload: { games, modelLevel: modelLevel as ScrapeModelLevel, random, depth } }).catch(
+    (error) => console.error('[scrape] Fatal error:', error),
   )
 
   return { status: 'started', games, modelLevel, random, depth }
