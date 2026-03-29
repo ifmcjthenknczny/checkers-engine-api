@@ -24,7 +24,7 @@
     border: 2px solid $blackSquareColor;
     animation: prixClipFix 2s linear infinite;
     @media (min-width: $breakpoint) {
-        border-width: 5px;
+        border-width: 4px;
     }
 }
 .loader::after{

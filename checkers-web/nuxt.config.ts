@@ -50,5 +50,8 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NODE_ENV === 'production' ? 'vercel' : 'node-server',
+    experimental: {
+      tasks: true,
+    },
   },
 })
