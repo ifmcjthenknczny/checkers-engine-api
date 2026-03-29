@@ -43,9 +43,8 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 * Move animation overlay into separate component.
 * Simplified components to reduce reliance on global state.
 
-* Alpha/beta tree move pruning algorithm for better performance. 
+* Introduce useNotDeterministic param that provides some randomness in choosing top moves.
 * Train model level 4 using previous model with huge depth and alpha/beta algorithm that is getting rid of pointless paths.
-* Data scraping optimization for multiple cores.
 
 * Switch from API calls to websocket communication.
 
