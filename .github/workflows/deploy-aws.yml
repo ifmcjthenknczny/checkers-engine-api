@@ -1,0 +1,75 @@
+# Deploy checkers-web to AWS Lambda (container image on ECR).
+#
+# One-time AWS setup (CLI or console):
+#   - ECR repository (name must match repository variable ECR_REPOSITORY)
+#   - Lambda function, package type Image, first deploy from the same ECR URI
+#   - IAM user or role for GitHub: ecr:* on that repo, lambda:UpdateFunctionCode on the function
+#
+# GitHub repository variables (Settings → Secrets and variables → Actions → Variables):
+#   AWS_REGION          e.g. eu-central-1
+#   ECR_REPOSITORY      e.g. checkers-web
+#   LAMBDA_FUNCTION_NAME
+#
+# GitHub repository secrets:
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+
+name: deploy-aws
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "checkers-web/**"
+      - "models/**"
+      - ".github/workflows/deploy-aws.yml"
+      - "checkers-web/Dockerfile"
+      - ".dockerignore"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -eux
+          test -n "${REGISTRY}"
+          test -n "${REPOSITORY}"
+          docker build -f checkers-web/Dockerfile -t "${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}" -t "${REGISTRY}/${REPOSITORY}:latest" .
+          docker push "${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
+          docker push "${REGISTRY}/${REPOSITORY}:latest"
+          echo "image_uri=${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Update Lambda function
+        env:
+          IMAGE_URI: ${{ steps.build.outputs.image_uri }}
+          LAMBDA_FUNCTION_NAME: ${{ vars.LAMBDA_FUNCTION_NAME }}
+        run: |
+          set -eux
+          test -n "${LAMBDA_FUNCTION_NAME}"
+          aws lambda update-function-code \
+            --function-name "${LAMBDA_FUNCTION_NAME}" \
+            --image-uri "${IMAGE_URI}"

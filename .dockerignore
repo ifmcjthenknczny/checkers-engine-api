@@ -1,0 +1,14 @@
+.git
+.github
+**/node_modules
+**/.nuxt
+**/.output
+**/.vercel
+**/.yarn/cache
+**/.yarn/install-state.gz
+ml-core
+data
+*.md
+.env
+.env.*
+!.env.example
