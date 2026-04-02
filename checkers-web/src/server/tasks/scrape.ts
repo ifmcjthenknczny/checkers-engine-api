@@ -28,11 +28,9 @@ function createProgressTracker(total: number, cores: number) {
   let written = 0
   const startTime = Date.now()
 
-  function log() {
-    if (completed !== 1 && completed % SCRAPE_CONFIG.logEvery !== 0 && completed !== total) return
-
+  function logTotalProgress() {
     const elapsedMs = Date.now() - startTime
-    const avgMs = written > 0 ? elapsedMs / written : 0
+    const avgMs = completed > 0 ? elapsedMs / completed : 0
     const remaining = total - completed
     const etaMs = avgMs > 0 ? avgMs * remaining : 0
 
@@ -40,9 +38,11 @@ function createProgressTracker(total: number, cores: number) {
     const bar = '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled)
     const avgStr = avgMs > 0 ? `${(avgMs / 1000).toFixed(3)}s` : '—'
     const etaStr = etaMs > 0 ? formatDuration(etaMs) : '—'
+    const etaDateStr =
+      etaMs > 0 ? new Date(Date.now() + etaMs).toISOString().slice(0, 19).replace('T', ' ') : '—'
 
     process.stdout.write(
-      `\r[scrape] [${bar}] ${completed}/${total} | avg: ${avgStr}/game | remaining: ${remaining} | ETA: ${etaStr}   `,
+      `\r[scrape] [${bar}] ${completed}/${total} | avg: ${avgStr}/game | ETA: ${etaStr} (at ${etaDateStr})   `,
     )
     if (completed === total) {
       process.stdout.write('\n')
@@ -55,7 +55,14 @@ function createProgressTracker(total: number, cores: number) {
       if (wasWritten) {
         written++
       }
-      log()
+      const shouldLogProgress = (
+        completed === 1 ||
+        completed % SCRAPE_CONFIG.progressLogEveryCompletedGames === 0 ||
+        completed === total
+      )
+      if (shouldLogProgress) {
+        logTotalProgress()
+      }
     },
     summarize() {
       const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)

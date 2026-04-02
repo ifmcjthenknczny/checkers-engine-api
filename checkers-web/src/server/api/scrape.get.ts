@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { type ScrapeModelLevel, MODEL_LEVELS } from '~/types'
-import { DEPTH_CONFIG, SCRAPE_CONFIG } from '~/config'
+import { DEPTH_CONFIG } from '~/config'
 
 const QuerySchema = z.object({
   games: z.coerce.number().int().min(1).default(1_000),

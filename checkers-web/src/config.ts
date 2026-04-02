@@ -4,7 +4,7 @@ export const BOARD_SIZE = 8
 
 
 export const SCRAPE_CONFIG = {
-    logEvery: 100,
+    progressLogEveryCompletedGames: 100,
     gameSaveBatchSize: 1_000,
 }
 
