@@ -42,15 +42,19 @@ function createProgressTracker(total: number, cores: number) {
     const etaStr = etaMs > 0 ? formatDuration(etaMs) : '—'
 
     process.stdout.write(
-      `\r[scrape] [${bar}] ${completed}/${total} | cores: ${cores} | written: ${written} | avg: ${avgStr}/game | remaining: ${remaining} | ETA: ${etaStr}   `,
+      `\r[scrape] [${bar}] ${completed}/${total} | avg: ${avgStr}/game | remaining: ${remaining} | ETA: ${etaStr}   `,
     )
-    if (completed === total) process.stdout.write('\n')
+    if (completed === total) {
+      process.stdout.write('\n')
+    }
   }
 
   return {
     onGameComplete(wasWritten: boolean) {
       completed++
-      if (wasWritten) written++
+      if (wasWritten) {
+        written++
+      }
       log()
     },
     summarize() {
@@ -71,7 +75,7 @@ export default defineTask({
     }
 
     const { games, modelLevel, random, depth } = payload as Payload
-    const cores = Math.max(1, parseInt(process.env.CORES ?? '1', 10))
+    const cores = Math.max(1, +(process.env.CORES ?? 1))
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const folderName = `games_${timestamp}`
