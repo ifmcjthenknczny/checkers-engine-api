@@ -7,6 +7,7 @@ import { determineGameResult } from '~/helpers/gameOver'
 import { pickRandomContinuation } from '~/helpers/ai'
 import { evaluateBoardDeeply, pickBestContinuationWithDepth } from './eval'
 import { ensureModelLoaded } from './model'
+import { logTotalProgress } from './log'
 import { SCRAPE_CONFIG } from '~/config'
 
 type JsonGameResult = -1 | 0 | 1
@@ -111,23 +112,6 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
   return mapGameDataToJson(turns, 'draw')
 }
 
-function logTotalProgress(gameIndex: number, count: number, startTime: number): void {
-  const completed = gameIndex + 1
-  const elapsedMs = Date.now() - startTime
-  const avgMs = completed > 0 ? elapsedMs / completed : 0
-  const remaining = count - completed
-  const etaMs = avgMs > 0 ? avgMs * remaining : 0
-
-  const avgPerGameSec = avgMs > 0 ? (avgMs / 1000).toFixed(4) : '—'
-  const etaStr = etaMs > 0 ? `${Math.round(etaMs / 1000)}s` : '—'
-  const etaDateStr =
-    etaMs > 0 ? new Date(Date.now() + etaMs).toISOString().slice(0, 19).replace('T', ' ') : '—'
-
-  console.log(
-    `[scrape] ${completed}/${count} games, avg. ${avgPerGameSec} s/game | ETA: ${etaStr} (at ${etaDateStr})`,
-  )
-}
-
 export async function playGames(
   count: number,
   modelLevel: ScrapeModelLevel,
@@ -181,7 +165,12 @@ export async function playGames(
       if (onGameComplete) {
         onGameComplete(written)
       } else if (shouldLog) {
-        logTotalProgress(i, count, startTime)
+        logTotalProgress({
+          completed: i + 1,
+          total: count,
+          startTime,
+          mode: 'line',
+        })
       }
     }
   } finally {
