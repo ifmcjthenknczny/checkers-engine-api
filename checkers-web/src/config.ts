@@ -4,8 +4,8 @@ export const BOARD_SIZE = 8
 
 
 export const SCRAPE_CONFIG = {
-    maxGames: 100_000,
-    logEvery: 100
+    progressLogEveryCompletedGames: 10,
+    gameSaveBatchSize: 1_000,
 }
 
 export const DEPTH_CONFIG = {
@@ -15,6 +15,7 @@ export const DEPTH_CONFIG = {
 }
 
 export const PRUNE_CONFIG = {
+    enabled: true,
     delta: 0.2,
     maxBestContinuations: 4
   }
@@ -27,6 +28,8 @@ export const MODEL_CONFIG: Record<string, ModelLevel> = {
 export const BEST_EVAL: Record<Player, number> = {
     white: 1,
     black: -1
-} 
+}
 
-export const USE_ALPHA_BETA = true
+export const NON_DETERMINISTIC_CONFIG = {
+    scoreDelta: 0.02,
+}

@@ -1,5 +1,5 @@
 import { writeFileSync, appendFileSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
 import type { BoardPosition, GameResult, Move, Player, ScrapeModelLevel } from '~/types'
 import { STARTING_BOARD_STATE, isQueen } from '~/helpers/board'
 import { applyMove } from '~/helpers/move'
@@ -7,7 +7,8 @@ import { determineGameResult } from '~/helpers/gameOver'
 import { pickRandomContinuation } from '~/helpers/ai'
 import { evaluateBoardDeeply, pickBestContinuationWithDepth } from './eval'
 import { ensureModelLoaded } from './model'
-import { SCRAPE_CONFIG, USE_ALPHA_BETA } from '~/config'
+import { logTotalProgress } from './log'
+import { SCRAPE_CONFIG } from '~/config'
 
 type JsonGameResult = -1 | 0 | 1
 type JsonPlayerMove = 1 | -1
@@ -81,7 +82,7 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
       return mapGameDataToJson(turns, gameResult)
     }
 
-    const continuation: { moves: Move[], score?: number } = (!modelLevel || shouldRandomizeMove(randomCoefficient, moveNumber)) ? { moves: pickRandomContinuation(board, currentPlayer) } : await pickBestContinuationWithDepth(board, currentPlayer, depth, {useAlphaBeta: USE_ALPHA_BETA})
+    const continuation: { moves: Move[], score?: number } = (!modelLevel || shouldRandomizeMove(randomCoefficient, moveNumber)) ? { moves: pickRandomContinuation(board, currentPlayer) } : await pickBestContinuationWithDepth(board, currentPlayer, depth)
 
     if (continuation.moves.length === 0) {
       const winner = currentPlayer === 'white' ? 'black' : 'white'
@@ -111,53 +112,75 @@ export async function playGame(modelLevel: ScrapeModelLevel, randomCoefficient: 
   return mapGameDataToJson(turns, 'draw')
 }
 
-function logProgress(gameIndex: number, count: number, gamesWritten: number, startTime: number): void {
-  const completed = gameIndex + 1
-  if (completed === 1 || completed % SCRAPE_CONFIG.logEvery === 0 || completed === count) {
-    const elapsedMs = Date.now() - startTime
-    const avgPerGame =
-      gamesWritten > 0 ? (elapsedMs / gamesWritten / 1000).toFixed(4) : '—'
-    console.log(
-      `[scrape] ${completed}/${count} games, ${gamesWritten} written, avg. ${avgPerGame} s/game`,
-    )
-  }
-}
-
 export async function playGames(
   count: number,
   modelLevel: ScrapeModelLevel,
   randomCoefficient: number,
   depth: number,
+  outputPath: string,
+  onGameComplete?: (written: boolean) => void,
 ): Promise<string> {
-  const dataDir = join(process.cwd(), '../data')
-  mkdirSync(dataDir, { recursive: true })
+  mkdirSync(dirname(outputPath), { recursive: true })
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const outputFile = join(dataDir, `games_${timestamp}.json`)
-
+  const outputFile = outputPath
   writeFileSync(outputFile, '[', 'utf8')
 
   let gamesWritten = 0
+  let gamesFlushed = 0
+  let pendingGames: string[] = []
   const startTime = Date.now()
+
+  const flushPending = (): void => {
+    if (pendingGames.length === 0) return
+    const prefix = gamesFlushed > 0 ? ',' : ''
+    appendFileSync(outputFile, `${prefix}${pendingGames.join(',')}`, 'utf8')
+    gamesFlushed += pendingGames.length
+    pendingGames = []
+  }
 
   try {
     for (let i = 0; i < count; i++) {
+      let written = false
       try {
         const gameData = await playGame(modelLevel, randomCoefficient, depth)
-        const prefix = gamesWritten > 0 ? ',' : ''
-        appendFileSync(outputFile, `${prefix}${JSON.stringify(gameData).slice(1, -1)}`, 'utf8')
+        const entry = JSON.stringify(gameData).slice(1, -1)
+        pendingGames.push(entry)
         gamesWritten++
+        written = true
+
+        if (gamesWritten % SCRAPE_CONFIG.gameSaveBatchSize === 0) {
+          flushPending()
+        }
       } catch (error) {
         console.error(`[scrape] Game ${i + 1} failed:`, error)
       }
 
-      logProgress(i, count, gamesWritten, startTime)
+      const completed = i + 1;
+      const shouldLog = (
+        completed === 1 ||
+        completed % SCRAPE_CONFIG.progressLogEveryCompletedGames === 0 ||
+        completed === count
+      )
+
+      if (onGameComplete) {
+        onGameComplete(written)
+      } else if (shouldLog) {
+        await logTotalProgress({
+          completed: i + 1,
+          total: count,
+          startTime,
+          mode: 'line',
+        })
+      }
     }
   } finally {
+    flushPending()
     appendFileSync(outputFile, ']', 'utf8')
   }
 
-  const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)
-  console.log(`[scrape] ${gamesWritten}/${count} games completed in ${totalSec}s. Output: ${outputFile}`)
+  if (!onGameComplete) {
+    const totalSec = ((Date.now() - startTime) / 1000).toFixed(1)
+    console.log(`[scrape] ${gamesWritten}/${count} games completed in ${totalSec}s. Output: ${outputFile}`)
+  }
   return outputFile
 }

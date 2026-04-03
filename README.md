@@ -15,6 +15,130 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 - **Frontend:** In `checkers-web`: `yarn install`, `yarn dev`. Should be available at `localhost:3000`.
 - **Training:** In `ml-core`: `uv sync`, then `uv run train.py` (data from `../data/`, model written to `../models/`)
 
+## API reference
+
+The backend exposes a small HTTP API (Nuxt server routes). All engine endpoints require a model level in the URL path (`1`, `2`, or `3`, corresponding to `engine_1.onnx` … `engine_3.onnx`).
+
+---
+
+### `GET /api/health`
+
+Returns a minimal liveness check.
+
+**Response**
+
+```json
+{ "ok": true }
+```
+
+---
+
+### `POST /api/engine/eval/:modelLevel`
+
+Evaluates a board position to an arbitrary search depth using minimax (with optional alpha-beta / variant pruning depending on `PRUNE_CONFIG`).
+
+**URL parameters**
+
+| Parameter    | Type    | Description                              |
+|--------------|---------|------------------------------------------|
+| `modelLevel` | integer | Model to use for leaf evaluation (1–3). |
+
+**Request body** (JSON)
+
+| Field              | Type              | Required | Default                    | Description |
+|--------------------|-------------------|----------|----------------------------|-------------|
+| `board`            | `number[32]`      | yes      | —                          | Board state as a flat array of 32 playable squares in standard checkers order. Allowed values: `0` (empty), `1` (white pawn), `-1` (black pawn), `3` (white queen), `-3` (black queen). |
+| `move`             | `"white"│"black"` | yes      | —                          | The player whose turn it is. |
+| `depth`            | integer (0–20)    | no       | `6`                        | Minimax search depth. `0` returns the raw neural-network score for the given position. |
+| `useNonDeterministic` | boolean        | no       | `false`                    | Ignored by this endpoint (used by the continuation endpoint only). |
+
+**Response**
+
+```json
+{
+  "evaluation": 0.312,
+  "status": "success"
+}
+```
+
+`evaluation` is a float in `[-1, 1]`: values near `1` favour white, near `-1` favour black.
+
+---
+
+### `POST /api/engine/continuation/:modelLevel`
+
+Returns the best sequence of moves (continuation) for the player to move, evaluated to a given search depth. Supports an optional non-deterministic mode that adds controlled randomness to move selection.
+
+**URL parameters**
+
+| Parameter    | Type    | Description                              |
+|--------------|---------|------------------------------------------|
+| `modelLevel` | integer | Model to use for leaf evaluation (1–3). |
+
+**Request body** (JSON)
+
+| Field                 | Type              | Required | Default | Description |
+|-----------------------|-------------------|----------|---------|-------------|
+| `board`               | `number[32]`      | yes      | —       | Board state (same encoding as `/eval`). |
+| `move`                | `"white"│"black"` | yes      | —       | The player whose turn it is. |
+| `depth`               | integer (0–20)    | no       | `6`     | Search depth. |
+| `useNonDeterministic` | boolean           | no       | `false` | When `true`, the engine does **not** always pick the single best move. Instead it collects all candidates whose deep score falls within `NON_DETERMINISTIC_CONFIG.scoreDelta` (default `0.02`) of the best score and samples one of them with probability **proportional to the score advantage** over the worst eligible candidate. This means the top move is still most likely to be chosen, but near-equal alternatives are occasionally played, producing less predictable opponents and more varied self-play data. Alpha-beta early cutoffs are disabled for the candidate loop when this flag is set, so that all shortlisted moves are fully evaluated before sampling. |
+
+**Response**
+
+```json
+{
+  "continuation": [
+    { "fromIndex": 21, "toIndex": 17, "isCapture": false, "isPotentialPromotion": false },
+    { "fromIndex": 17, "toIndex": 13, "isCapture": true, "captureIndex": 15, "followingChainedCaptureForbiddenDirection": [-1, 1], "isPotentialPromotion": false }
+  ]
+}
+```
+
+`continuation` is an ordered array of `Move` objects representing the full legal move sequence (multi-jump captures are returned as a chain). An empty array means the current player has no legal moves (game over).
+
+**`Move` object fields**
+
+| Field                                    | Type      | Description |
+|------------------------------------------|-----------|-------------|
+| `fromIndex`                              | integer   | Source square index (0–31, standard checkers numbering). |
+| `toIndex`                                | integer   | Destination square index. |
+| `isCapture`                              | boolean   | Whether this step captures an opponent piece. |
+| `captureIndex`                           | integer   | *(only when `isCapture: true`)* Index of the captured square. |
+| `followingChainedCaptureForbiddenDirection` | `[number, number]` | *(only when `isCapture: true`)* Direction vector `[rowDir, colDir]` that the piece may not continue in, used to prevent reversing back along the same diagonal in chain captures. |
+| `isPotentialPromotion`                   | boolean   | Whether this step may result in a king promotion. |
+
+---
+
+### `GET /api/scrape` *(development only)*
+
+Triggers a background self-play data generation task. Returns immediately with a `started` status while the task runs asynchronously on the server. **Only available when `NODE_ENV=development`.**
+
+**Query parameters**
+
+| Parameter    | Type    | Required | Default | Description |
+|--------------|---------|----------|---------|-------------|
+| `games`      | integer | yes      | `1000`  | Number of self-play games to generate (max `100 000`). |
+| `modelLevel` | integer | yes      | —       | Engine model to use during self-play (0 = random moves, 1–3 = engine). |
+| `random`     | float   | yes      | —       | Base probability (`0`–`1`) that each move is chosen randomly instead of by the engine. Early game turns have a higher effective random probability that decreases linearly until the base value is reached. |
+| `depth`      | integer | no       | `0`     | Minimax depth used by the engine during self-play (0 = shallow eval only). |
+
+**Response**
+
+```json
+{
+  "status": "started",
+  "games": 1000,
+  "modelLevel": 3,
+  "random": 0.2,
+  "depth": 3
+}
+```
+
+Generated data is written as JSON files to `../data/games_<timestamp>/` relative to the server working directory.
+
+---
+
 ## Model training — iterations
 
 ### Iteration 1
@@ -43,9 +167,7 @@ The **frontend** (`checkers-web`) is an upgrade and a complete rewrite of the or
 * Move animation overlay into separate component.
 * Simplified components to reduce reliance on global state.
 
-* Alpha/beta tree move pruning algorithm for better performance. 
 * Train model level 4 using previous model with huge depth and alpha/beta algorithm that is getting rid of pointless paths.
-* Data scraping optimization for multiple cores.
 
 * Switch from API calls to websocket communication.
 

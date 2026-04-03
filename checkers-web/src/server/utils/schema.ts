@@ -12,6 +12,7 @@ export const BodyRequestSchema = z.object({
     }),
   move: z.enum(COLORS),
   depth: z.coerce.number().int().min(0).max(DEPTH_CONFIG.max).default(DEPTH_CONFIG.opponentDefault),
+  useNonDeterministic: z.boolean().default(false),
 })
 
 export async function parseBodyOrThrow<T>(event: H3Event, schema: z.ZodSchema<T>): Promise<T> {

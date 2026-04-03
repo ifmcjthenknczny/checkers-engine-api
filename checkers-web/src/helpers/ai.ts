@@ -22,10 +22,7 @@ export async function pickBestEngineContinuation(
   depth: number = DEPTH_CONFIG.opponentDefault,
   modelLevel: ModelLevel,
 ): Promise<Move[]> {
-  const baseUrl =
-    useRuntimeConfig().public.engineApiUrl ??
-    (typeof import.meta !== 'undefined' && import.meta.env?.NUXT_PUBLIC_ENGINE_API_URL) ??
-    ''
+  const baseUrl = useRuntimeConfig().public.engineApiUrl ?? ''
   const url = baseUrl
     ? `${baseUrl.replace(/\/$/, '')}/engine/continuation/${modelLevel}`
     : `/api/engine/continuation/${modelLevel}`
